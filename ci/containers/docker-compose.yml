@@ -1,0 +1,19 @@
+version: '3'
+services:
+  jenkins:
+    container_name: jenkins
+    image: isi/mint-jenkins
+    ports:
+      - "0.0.0.0:8082:8080"
+    volumes:
+      - /var/jenkins_home:/var/jenkins_home
+      - /var/run/docker.sock:/var/run/docker.sock
+  jenkins_badges:
+    container_name: jenkins_badges
+    image: isi/mint-jenkins-badges
+    build: ./jenkins_badges
+    depends_on:
+      - jenkins
+    ports:
+      - "0.0.0.0:8081:5000"
+    command: python /server.py http://jenkins:8080

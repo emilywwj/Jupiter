@@ -1,0 +1,57 @@
+pipeline {
+  agent any
+  options { disableConcurrentBuilds() }
+  stages {
+    stage('Build') {
+      parallel {
+        stage('mq') {
+          steps {
+            echo 'Build MQ'
+          }
+        }
+        stage('drepr') {
+          steps {
+            sh '''cd data_representation/container
+docker-compose build'''
+          }
+        }
+      }
+    }
+    stage('Unit Test') {
+      parallel {
+        stage('mq') {
+          steps {
+            echo 'Run unit test of MessageQueue'
+          }
+        }
+      }
+    }
+    stage('Local Integration Test') {
+      parallel {
+        stage('mq') {
+          steps {
+            echo 'Run integration test of MQ'
+          }
+        }
+      }
+    }
+    stage('Full Integration Test') {
+      steps {
+        echo 'Run full integration test'
+      }
+    }
+    stage('Staging Deployment') {
+      when { branch "master" }
+      steps {
+        echo 'Deploy to staging environment '
+        sh 'printenv'
+      }
+    }
+    stage('Production Deployment') {
+      when { branch "master" }
+      steps {
+        echo 'Deploy to production'
+      }
+    }
+  }
+}

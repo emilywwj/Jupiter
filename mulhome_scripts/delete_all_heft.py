@@ -5,6 +5,8 @@ __version__ = "3.0"
 
 import sys
 sys.path.append("../")
+import os
+sys.path.append(os.getcwd())
 # from utilities import *
 import utilities
 import yaml

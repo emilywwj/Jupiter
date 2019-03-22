@@ -115,6 +115,8 @@ def k8s_jupiter_deploy(app_id,app_name,port,mapper_log):
         print('*************************')
 
         #Start the task to node mapper
+        print("DEBUG: from auto_generate_log.py: " + str(profiler_ips))
+        print("DEBUG: from auto_generate_log.py: " + str(execution_ips))
         
         task_mapping_function(profiler_ips,execution_ips,node_names,app_name)
 
@@ -138,7 +140,7 @@ def k8s_jupiter_deploy(app_id,app_name,port,mapper_log):
                     if "status" not in data:
                         break
             except Exception as e:
-                #print(e)
+                print(e)
                 print("Will retry to get the mapping for app "+ app_name)
                 time.sleep(30)
 

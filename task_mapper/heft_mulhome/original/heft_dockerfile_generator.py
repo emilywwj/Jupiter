@@ -17,7 +17,9 @@ RUN apt-get update
 RUN apt-get -y install build-essential libssl-dev libffi-dev python-dev
 RUN apt-get -yqq install python python-pip python-dev python3-pip python3-dev
 RUN pip3 install --upgrade pip
-RUN apt-get install -y openssh-server sshpass nano virtualenv supervisor
+RUN apt-get update && apt-get install -y openssh-server
+RUN apt-get install -y sshpass nano virtualenv
+RUN apt-get install -y supervisor
 RUN apt-get install -y vim
 
 # Install required python libraries
@@ -43,7 +45,7 @@ ADD task_mapper/heft_mulhome/original/create_input.py /heft/create_input.py
 ADD task_mapper/heft_mulhome/original/read_input_heft.py /heft/read_input_heft.py
 ADD task_mapper/heft_mulhome/original/write_input_heft.py /heft/write_input_heft.py
 ADD jupiter_config.ini /heft/jupiter_config.ini
-ADD scripts/keep_alive.py /heft/keep_alive.py
+ADD mulhome_scripts/keep_alive.py /heft/keep_alive.py
 
 RUN mkdir -p /heft/output
 RUN chmod +x /heft/start.sh

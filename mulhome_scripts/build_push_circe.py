@@ -4,8 +4,8 @@ __license__ = "GPL"
 __version__ = "2.1"
 
 import sys
-sys.path.append("../")
 import os
+sys.path.append(os.getcwd())
 import configparser
 import jupiter_config
 
@@ -45,6 +45,7 @@ def build_push_circe():
     import circe_docker_files_generator as dc 
 
     os.chdir(jupiter_config.CIRCE_PATH)
+    # print("DEBUG: "+ jupiter_config.CIRCE_PATH)
 
     dc.write_circe_home_docker(username = jupiter_config.USERNAME,
                       password = jupiter_config.PASSWORD,

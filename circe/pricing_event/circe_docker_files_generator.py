@@ -9,6 +9,7 @@ __version__ = "3.0"
 from pprint import pprint
 from dockerfile_parse import DockerfileParser
 
+
 ############################################ HOME DOCKER TEMPLATE #########################################################
 
 template_home ="""\

@@ -6,6 +6,7 @@ __version__ = "2.1"
 import sys
 sys.path.append("../")
 import os
+sys.path.append(os.getcwd())
 import jupiter_config
 
 def prepare_global_info():

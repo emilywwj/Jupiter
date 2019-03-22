@@ -50,6 +50,7 @@ def get_all_profilers():
 
         # We have defined the namespace for deployments in jupiter_config
         namespace = jupiter_config.PROFILER_NAMESPACE
+        print("namespace: " + namespace)
 
         # Get proper handles or pointers to the k8-python tool to call different functions.
         api = client.ExtensionsV1beta1Api()
@@ -67,7 +68,7 @@ def get_all_profilers():
             print("Exception Occurred")
         # if a service is running, kill it
         if resp:
-            # print(resp.spec.cluster_ip)
+            print(resp.spec.cluster_ip)
             mapping[key] = resp.spec.cluster_ip
 
     return mapping

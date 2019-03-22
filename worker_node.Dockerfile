@@ -14,7 +14,7 @@ RUN apt-get install iproute2 -y
 RUN wget https://archive.apache.org/dist/hadoop/core/hadoop-2.8.1/hadoop-2.8.1.tar.gz -P ~/
 RUN tar -zxvf ~/hadoop-2.8.1.tar.gz -C ~/
 RUN rm ~/hadoop-2.8.1.tar.gz
-ADD circe/pricing_event/requirements.txt /requirements.txt
+ADD circe/original/requirements.txt /requirements.txt
 
 RUN pip3 install -r requirements.txt
 RUN echo 'root:PASSWORD' | chpasswd
@@ -30,22 +30,19 @@ RUN echo "export VISIBLE=now" >> /etc/profile
 
 RUN mkdir -p /centralized_scheduler/input
 RUN mkdir -p /centralized_scheduler/output
-RUN mkdir -p /centralized_scheduler/sample_input
+#RUN mkdir -p /centralized_scheduler/runtime
+ADD circe/original/monitor.py /centralized_scheduler/monitor.py
 RUN mkdir -p /home/darpa/apps/data
 
+#ADD circe/original/rt_profiler_data_update.py  /centralized_scheduler/rt_profiler_data_update.py
+
 # IF YOU WANNA DEPLOY A DIFFERENT APPLICATION JUST CHANGE THIS LINE
-ADD app_specific_files/network_monitoring_app/scripts/ /centralized_scheduler/
-ADD app_specific_files/network_monitoring_app/sample_input/ /centralized_scheduler/sample_input/
+ADD app_specific_files/network_monitoring/scripts/ /centralized_scheduler/
 
 ADD jupiter_config.ini /jupiter_config.ini
-ADD jupiter_config.py /jupiter_config.py
-
-#ADD circe/pricing_event/monitor.py /centralized_scheduler/monitor.py
-ADD circe/pricing_event/start_controller_worker.sh /start.sh
-
-ADD circe/pricing_event/monitor.py /centralized_scheduler/monitor.py
 
 
+ADD circe/original/start_worker.sh /start.sh
 RUN chmod +x /start.sh
 
 WORKDIR /

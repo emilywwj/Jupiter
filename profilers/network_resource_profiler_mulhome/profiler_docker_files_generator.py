@@ -19,9 +19,12 @@ FROM ubuntu:16.04
 # Install required libraries
 RUN apt-get update
 RUN apt-get -y install build-essential libssl-dev libffi-dev python-dev
-RUN apt-get -yqq install python3-pip python3-dev
+RUN apt-get -yqq install python python-pip python-dev python3-pip python3-dev
 RUN pip3 install --upgrade pip
-RUN apt-get install -y openssh-server mongodb sshpass nano virtualenv supervisor
+RUN apt-get update && apt-get install -y openssh-server
+RUN apt-get install -y mongodb
+RUN apt-get install -y sshpass nano virtualenv
+RUN apt-get install -y supervisor
 
 # Install required python libraries
 ADD profilers/network_resource_profiler_mulhome/home/requirements.txt /requirements.txt
@@ -100,9 +103,13 @@ FROM ubuntu:16.04
 # Install required libraries
 RUN apt-get update
 RUN apt-get -y install build-essential libssl-dev libffi-dev python-dev
-RUN apt-get -yqq install python3-pip python3-dev
+RUN apt-get -yqq install python python-pip python-dev python3-pip python3-dev
 RUN pip3 install --upgrade pip
-RUN apt-get install -y openssh-server mongodb net-tools sshpass nano virtualenv supervisor
+RUN apt-get update && apt-get install -y openssh-server
+RUN apt-get install -y mongodb
+RUN apt-get install -y sshpass nano virtualenv
+RUN apt-get install -y supervisor
+RUN apt-get install -y net-tools
 
 # Install required python libraries
 ADD profilers/network_resource_profiler_mulhome/worker/requirements.txt /requirements.txt

@@ -26,7 +26,7 @@ def k8s_heft_scheduler(profiler_ips, ex_profiler_ips, node_names,app_name):
         This script deploys HEFT in the system. 
     """
     jupiter_config.set_globals()
-
+    
     """
         This loads the node list
     """
@@ -81,7 +81,8 @@ def k8s_heft_scheduler(profiler_ips, ex_profiler_ips, node_names,app_name):
     node_profiler_ips = profiler_ips.copy()
     home_profiler_ips = {}
     for key in homes:
-        print(key)
+        print("DEBUG: " + str(key))
+        print("DEBUG: " + str(profiler_ips))
         home_profiler_ips[key] = profiler_ips[key]
         del node_profiler_ips[key]
 

@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+import axios from 'axios';
 
 class AppForm extends Component {
   constructor() {
@@ -14,6 +15,7 @@ class AppForm extends Component {
       };
       this.handleChange = this.handleChange.bind(this);
       this.handleNodesChange = this.handleNodesChange.bind(this);
+      this.handleSubmit = this.handleSubmit.bind(this);
       // this.addNode = this.addNode.bind(this);
   };
 
@@ -50,11 +52,31 @@ class AppForm extends Component {
   //   }));
   // }
 
+  handleSubmit(event) {
+    event.preventDefault()
+
+    const data = this.state;
+    console.log(data);
+    axios.post(`${process.env.REACT_APP_URL}:5000/data`, data)
+    .then((res) => { 
+      this.setState({
+        appPath: '',
+        SCHEDULER: '',
+        nodes: 
+        {
+          nodesNum: '',
+          nodesDetails: '',
+        },
+      });
+    })
+    .catch((err) => { console.log(err); });
+  };
+
   render() {
     let nodes = this.state.nodes;
 
     return (
-      <form className="mb-3">
+      <form className="mb-3" onSubmit={this.handleSubmit}>
         <div className="input-group mb-2">
           <div className="input-group-prepend">
             <span className="input-group-text">App path:</span>

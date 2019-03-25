@@ -15,3 +15,5 @@ class App extends Component {
 }
 
 export default App;
+
+// export REACT_APP_URL=http://localhost

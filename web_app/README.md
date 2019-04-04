@@ -4,6 +4,7 @@
 ```console
 $ cd backend
 $ pip3 install -r requirements.txt
+$ export FLASK_APP=/project/__init__.py
 $ python manage.py run
 ```
 

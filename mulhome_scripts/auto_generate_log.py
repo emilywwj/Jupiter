@@ -457,7 +457,9 @@ def main():
         Deploy num_dags of the application specified by app_name
     """
     
-    app_name = 'dummy'
+    jupiter_config.set_globals()
+    app_name = jupiter_config.APP_OPTION
+
     num_samples = 2
     num_runs = 1
     num_dags_list = [1]

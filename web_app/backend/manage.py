@@ -1,6 +1,7 @@
 from flask.cli import FlaskGroup
 import unittest
 from project import app
+import os
 
 
 cli = FlaskGroup(app)

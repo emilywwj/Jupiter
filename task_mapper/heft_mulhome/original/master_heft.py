@@ -16,8 +16,19 @@ import json
 from random import randint
 import configparser
 from os import path
+import paho.mqtt.client as mqtt
 
 app = Flask(__name__)
+
+BOKEH = 1
+
+def demo_help(topic, msg):
+    # print("DEBUGGGGGG: It reaches demo_help function!")
+    # client = mqtt.Client()
+    # client.connect("test.mosquitto.org", 1883, 60)
+    # client.publish(topic, msg, qos=1)
+    # client.disconnect()
+
 
 def read_file(file_name):
     """Read file content to a list
@@ -167,6 +178,13 @@ def main():
                 assignments[non_tasks[i]] = node_info[randint(1,num_nodes)] 
             heft_scheduler.display_result()
             print(assignments)
+
+            t = time.time()
+            if BOKEH == 1:
+                assgn = ' '.join('{}:{}:{}'.format(key, val,t) for key, val in assignments.items())
+                msg = "mappings "+ assgn
+                demo_help("JUPITER", msg)
+
             break;
         else:
             print('No input TGFF file found!')

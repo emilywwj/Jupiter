@@ -3,8 +3,12 @@ __copyright__ = "Copyright (c) 2018, Autonomous Networks Research Group. All rig
 __license__ = "GPL"
 __version__ = "2.1"
 
+import sys
+from os import path
+sys.path.append(path.abspath(__file__ + "/../../../../"))
 from pprint import pprint
 from dockerfile_parse import DockerfileParser
+import jupiter_config
 
 ############################################ HEFT DOCKER #########################################################
 
@@ -73,7 +77,11 @@ def write_heft_docker(**kwargs):
 		# print(dfp.content)
 
 if __name__ == '__main__':
-		write_heft_docker(username = 'root',
-											password = 'PASSWORD',
-											app_file = 'app_specific_files/network_monitoring',
-											ports = '22 8888')
+
+	jupiter_config.set_globals()
+	app_file = jupiter_config.APP_NAME
+
+	write_heft_docker(username = 'root',
+						password = 'PASSWORD',
+						app_file = app_file,
+						ports = '22 8888')

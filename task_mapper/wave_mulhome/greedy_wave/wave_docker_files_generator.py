@@ -3,8 +3,12 @@ __copyright__ = "Copyright (c) 2018, Autonomous Networks Research Group. All rig
 __license__ = "GPL"
 __version__ = "3.0"
 
+import sys
+from os import path
+sys.path.append(path.abspath(__file__ + "/../../../../"))
 from pprint import pprint
 from dockerfile_parse import DockerfileParser
+import jupiter_config
 
 ############################################ HOME DOCKER TEMPLATE #########################################################
 
@@ -94,8 +98,12 @@ def write_wave_home_docker(**kwargs):
     #print(dfp.content)
 
 if __name__ == '__main__':
-    write_wave_worker_docker( app_file='app_specific_files/network_monitoring',
+
+    jupiter_config.set_globals()
+    app_file = jupiter_config.APP_NAME
+
+    write_wave_worker_docker( app_file= app_file,
                       ports = '8888')
-    write_wave_home_docker( app_file='app_specific_files/network_monitoring',
+    write_wave_home_docker( app_file= app_file,
                       ports = '8888')
     

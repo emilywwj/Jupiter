@@ -13,6 +13,7 @@ import configparser
 
 HERE       = path.abspath(path.dirname(__file__)) + "/"
 INI_PATH   = HERE + 'jupiter_config.ini'
+APP_NAME_INPUT = 'app_specific_files/network_monitoring_app'
 
 def get_home_node(file_name):
     with open(file_name) as file:
@@ -173,10 +174,12 @@ def set_globals():
 	HEFT_IMAGE              = 'docker.io/emilywwj/%s_heft:coded'%(profiler_option)
 
 	"""Application Information"""
-	global APP_PATH, APP_NAME
+	global APP_PATH, APP_NAME, APP_OPTION
 
-	APP_PATH                = HERE  + 'app_specific_files/network_monitoring_app/'
-	APP_NAME                = 'app_specific_files/network_monitoring_app'
+	APP_PATH                = HERE  + APP_NAME_INPUT + "/"
+	APP_NAME                = APP_NAME_INPUT
+	APP_OPTION              = 'dummy'
+
 
 
 if __name__ == '__main__':

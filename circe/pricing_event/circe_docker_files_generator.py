@@ -6,8 +6,12 @@ __copyright__ = "Copyright (c) 2018, Autonomous Networks Research Group. All rig
 __license__ = "GPL"
 __version__ = "3.0"
 
+import sys
+from os import path
+sys.path.append(path.abspath(__file__ + "/../../../"))
 from pprint import pprint
 from dockerfile_parse import DockerfileParser
+import jupiter_config
 
 
 ############################################ HOME DOCKER TEMPLATE #########################################################
@@ -239,16 +243,25 @@ def write_circe_home_docker(**kwargs):
 
 
 if __name__ == '__main__':
+
+    jupiter_config.set_globals()
+    app_file = jupiter_config.APP_NAME
+    pricing_option = jupiter_config.PRICE_OPTION
+
     write_circe_home_docker(username = 'root',
                       password = 'PASSWORD',
-                      app_file='app_specific_files/network_monitoring',
+                      app_file= app_file,
+                      pricing_option= pricing_option,
                       ports = '22 8888')
 
     write_circe_controller_worker_docker(username = 'root',
                       password = 'PASSWORD',
-                      app_file='app_specific_files/network_monitoring',
+                      app_file= app_file,
+                      pricing_option= pricing_option,
                       ports = '22 57021')
+
     write_circe_computing_worker_docker(username = 'root',
                       password = 'PASSWORD',
-                      app_file='app_specific_files/network_monitoring',
+                      app_file= app_file,
+                      pricing_option= pricing_option,
                       ports = '22 57021')

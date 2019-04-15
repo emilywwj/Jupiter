@@ -92,16 +92,6 @@ def modify_task_mapper_option(file_path, task_mapper_option):
 
 @app.route('/run_exec_profiler', methods=['POST'])
 def get_exec_profile_info():
-    jupiter_config.set_globals()
-    exec_namespace = jupiter_config.EXEC_NAMESPACE
-    app_name = jupiter_config.APP_OPTION
-    cmd = "kubectl get pod -l app=%s-home --namespace=%s -o name" % (app_name, exec_namespace)
-    cmd_output = get_command_output(cmd)
-    pod_name = cmd_output.split('/')[1].split('\\')[0]
-    file_path = '%s/%s:/centralized_scheduler/profiler_files_processed/profiler_home.txt' % (exec_namespace, pod_name)
-    cmd = "kubectl cp " + file_path + " ."
-    print("RUN: " + cmd)
-    os.system(cmd)
 
     file_exist = False
     response_object = {"exec_profiler_info": {}}
@@ -115,10 +105,24 @@ def get_exec_profile_info():
             file_exist = True
         except FileNotFoundError:
             print("The execute information is not ready.")
+
+            run_command_get_file()
             time.sleep(5)
             continue
 
     return jsonify(response_object), 201
+
+def run_command_get_file():
+    jupiter_config.set_globals()
+    exec_namespace = jupiter_config.EXEC_NAMESPACE
+    app_name = jupiter_config.APP_OPTION
+    cmd = "kubectl get pod -l app=%s-home --namespace=%s -o name" % (app_name, exec_namespace)
+    cmd_output = get_command_output(cmd)
+    pod_name = cmd_output.split('/')[1].split('\\')[0]
+    file_path = '%s/%s:/centralized_scheduler/profiler_files_processed/profiler_home.txt' % (exec_namespace, pod_name)
+    cmd = "kubectl cp " + file_path + " ."
+    print("RUN: " + cmd)
+    os.system(cmd)
 
 
 def get_command_output(command):
@@ -128,3 +132,77 @@ def get_command_output(command):
     # retcode = p.wait()
     output = str(output)
     return output
+
+@app.route('/show_demo', methods=['GET', 'POST'])
+def show_demo():
+    import paho.mqtt.client as mqtt
+
+    # The callback for when the client receives a CONNACK response from the server.
+    def on_connect(client, userdata, flags, rc):
+        print("Connected with result code "+str(rc))
+
+        # Subscribing in on_connect() means that if we lose the connection and
+        # reconnect then subscriptions will be renewed.
+        client.subscribe("JUPITER")
+
+
+    # The callback for when a PUBLISH message is received from the server.
+    def on_message(client, userdata, msg):
+        print(msg.topic + " " + str(msg.payload))
+
+    client = mqtt.Client()
+    client.on_connect = on_connect
+    client.on_message = on_message
+
+    client.connect("test.mosquitto.org", 1883, 60)
+
+    # Blocking call that processes network traffic, dispatches callbacks and
+    # handles reconnecting.
+    # Other loop*() functions are available that give a threaded interface and a
+    # manual interface.
+    client.loop_forever()
+
+
+# @app.route('/get_network_statistics', methods=['POST'])
+# def get_network_statistics():
+
+#     file_exist = False
+#     response_object = {"network_statistics": {}}
+#     while not file_exist:
+#         try:
+#             f = open('profiler_home.txt')
+#             lines = f.readlines()
+#             lines.pop(0)
+#             json_string = json.dumps(lines)
+#             response_object["network_statistics"] = json_string
+#             file_exist = True
+#         except FileNotFoundError:
+#             print("The execute information is not ready.")
+
+#             run_command_get_file()
+#             time.sleep(5)
+#             continue
+
+#     return jsonify(response_object), 201
+
+# def run_command_get_file():
+#     jupiter_config.set_globals()
+#     profiler_namespace = jupiter_config.PROFILER_NAMESPACE
+#     app_name = jupiter_config.APP_OPTION
+#     cmd = "kubectl get pod -l app=homeprofiler --namespace=%s -o name" % (profiler_namespace)
+#     cmd_output = get_command_output(cmd)
+#     pod_name = cmd_output.split('/')[1].split('\\')[0]
+#     # file_path = '%s/%s:/network_profiling/parameters_*' % (profiler_namespace, pod_name)
+    
+#     cmd = "kubectl cp " + file_path + " ."
+#     print("RUN: " + cmd)
+#     os.system(cmd)
+
+
+# def get_command_output(command):
+#     command = command.split(" ")
+#     p = subprocess.Popen(command, stdout=subprocess.PIPE)
+#     (output, err) = p.communicate()
+#     # retcode = p.wait()
+#     output = str(output)
+#     return output

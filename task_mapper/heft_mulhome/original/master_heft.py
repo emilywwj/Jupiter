@@ -1,5 +1,4 @@
-#!/usr/bin/python
-# -*- coding: utf-8 -*-
+
 """
    This file implements HEFT code in the kubernettes system.
 """
@@ -19,16 +18,6 @@ from os import path
 import paho.mqtt.client as mqtt
 
 app = Flask(__name__)
-
-BOKEH = 1
-
-def demo_help(topic, msg):
-    # print("DEBUGGGGGG: It reaches demo_help function!")
-    # client = mqtt.Client()
-    # client.connect("test.mosquitto.org", 1883, 60)
-    # client.publish(topic, msg, qos=1)
-    # client.disconnect()
-
 
 def read_file(file_name):
     """Read file content to a list
@@ -134,6 +123,12 @@ def get_taskmap():
     print("non tasks", non_tasks)
     return tasks, task_order, super_tasks, non_tasks
 
+def demo_help(server,port,topic,msg):
+    client = mqtt.Client()
+    client.connect(server, port, 60)
+    client.publish(topic, msg, qos=1)
+    client.disconnect()
+
 def main():
     """
         - Load all the confuguration
@@ -166,7 +161,13 @@ def main():
     tasks, task_order, super_tasks, non_tasks = get_taskmap()
     configuration_path='/heft/dag.txt'
     profiler_ip,exec_home_ip,num_nodes,network_map,node_list = get_global_info()
-    
+
+    global BOKEH_SERVER, BOKEH_PORT, BOKEH
+    BOKEH_SERVER = config['OTHER']['BOKEH_SERVER']
+    BOKEH_PORT = int(config['OTHER']['BOKEH_PORT'])
+    BOKEH = int(config['OTHER']['BOKEH'])
+
+
     while True:
         if os.path.isfile(tgff_file):
             heft_scheduler = heft_dup.HEFT(tgff_file)
@@ -183,7 +184,7 @@ def main():
             if BOKEH == 1:
                 assgn = ' '.join('{}:{}:{}'.format(key, val,t) for key, val in assignments.items())
                 msg = "mappings "+ assgn
-                demo_help("JUPITER", msg)
+                demo_help(BOKEH_SERVER,BOKEH_PORT,"JUPITER", msg)
 
             break;
         else:

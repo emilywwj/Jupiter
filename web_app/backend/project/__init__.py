@@ -1,4 +1,4 @@
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, render_template
 from os import path
 import os
 from flask_cors import CORS
@@ -9,6 +9,12 @@ import subprocess
 import sys
 sys.path.append(path.abspath(__file__ + "/../../../../"))
 import jupiter_config
+
+# from demo import get_plot1, get_plot2, get_plot3, get_plot4
+import demo
+from bokeh.embed import server_document
+from bokeh.server.server import Server
+from tornado.ioloop import IOLoop
 
 
 cors = CORS()
@@ -93,33 +99,38 @@ def modify_task_mapper_option(file_path, task_mapper_option):
 @app.route('/run_exec_profiler', methods=['POST'])
 def get_exec_profile_info():
 
-    file_exist = False
     response_object = {"exec_profiler_info": {}}
-    while not file_exist:
-        try:
-            f = open('profiler_home.txt')
-            lines = f.readlines()
-            lines.pop(0)
-            json_string = json.dumps(lines)
-            response_object["exec_profiler_info"] = json_string
-            file_exist = True
-        except FileNotFoundError:
-            print("The execute information is not ready.")
+    nodes = read_node_list(path.abspath(__file__ + '../../../../../') + "/nodes.txt")
 
-            run_command_get_file()
-            time.sleep(5)
-            continue
+    for node in nodes:
+        file_exist = False
+        while not file_exist:
+            try:
+                f = open('profiler_%s.txt'%(node))
+                lines = f.readlines()
+                lines.pop(0)
+                json_string = json.dumps(lines)
+                response_object["exec_profiler_info"][node] = json_string
+                file_exist = True
+            except FileNotFoundError:
+                print("The execute information is not ready.")
+
+                run_command_get_file('home')
+                time.sleep(5)
+                continue
 
     return jsonify(response_object), 201
 
-def run_command_get_file():
+
+def run_command_get_file(node):
     jupiter_config.set_globals()
     exec_namespace = jupiter_config.EXEC_NAMESPACE
     app_name = jupiter_config.APP_OPTION
-    cmd = "kubectl get pod -l app=%s-home --namespace=%s -o name" % (app_name, exec_namespace)
+
+    cmd = "kubectl get pod -l app=%s-%s --namespace=%s -o name" % (app_name, node, exec_namespace)
     cmd_output = get_command_output(cmd)
     pod_name = cmd_output.split('/')[1].split('\\')[0]
-    file_path = '%s/%s:/centralized_scheduler/profiler_files_processed/profiler_home.txt' % (exec_namespace, pod_name)
+    file_path = '%s/%s:/centralized_scheduler/profiler_files_processed/profiler_%s.txt' % (exec_namespace, pod_name, node)
     cmd = "kubectl cp " + file_path + " ."
     print("RUN: " + cmd)
     os.system(cmd)
@@ -133,13 +144,62 @@ def get_command_output(command):
     output = str(output)
     return output
 
+
+def read_node_list(path2):
+    nodes = []
+    node_file = open(path2, "r")
+    for line in node_file:
+        node_line = line.strip().split(" ")
+        nodes.append(node_line[0])
+    return nodes
+
+
+# *******************************************
+def modify_doc(doc):
+    layout = demo.run_demo(doc)
+    doc.add_root(layout)
+    doc.add_periodic_callback(demo.update, 50) 
+
+def demo_worker():
+    # Can't pass num_procs > 1 in this configuration. If you need to run multiple
+    # processes, see e.g. flask_gunicorn_embed.py
+    server = Server({'/demo': modify_doc}, io_loop=IOLoop(), allow_websocket_origin=["localhost:5000"])
+    server.start()
+    server.io_loop.start()
+
+from threading import Thread
+print("Start the thread for demo.")
+Thread(target=demo_worker).start()
+
+
+@app.route('/plot')
+def demo_page():
+
+    script = server_document('http://localhost:5006/demo')
+    # print("Check demo page at http://localhost:5000/plot")
+    return render_template("test.html", script=script, template="Flask")
+
+
+
+# def get_plot():
+# #     post_data = request.get_json()
+# #     p = None
+# #     if (post_data == 'node_info'):
+#     p = get_plot2()
+
+#     # following above points:
+#     #  + pass plot object 'p' into json_item
+#     #  + wrap the result in json.dumps and return to frontend
+#     return json.dumps(json_item(p, "myplot"))
+
+
 @app.route('/show_demo', methods=['GET', 'POST'])
 def show_demo():
     import paho.mqtt.client as mqtt
 
     # The callback for when the client receives a CONNACK response from the server.
     def on_connect(client, userdata, flags, rc):
-        print("Connected with result code "+str(rc))
+        print("Connected with result code " + str(rc))
 
         # Subscribing in on_connect() means that if we lose the connection and
         # reconnect then subscriptions will be renewed.

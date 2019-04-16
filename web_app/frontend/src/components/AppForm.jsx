@@ -1,6 +1,8 @@
 import React, { Component } from 'react';
 import axios from 'axios';
 import './AppForm.css';
+import Iframe from 'react-iframe';
+
 
 class AppForm extends Component {
   constructor() {
@@ -19,9 +21,8 @@ class AppForm extends Component {
       this.handleNodesChange = this.handleNodesChange.bind(this);
       this.handleSubmit = this.handleSubmit.bind(this);
       this.handleRunExecProfiler = this.handleRunExecProfiler.bind(this);
+      this.handlePlot = this.handlePlot.bind(this);
       this.handleDemo = this.handleDemo.bind(this);
-      // this.handleTaskStatistics = this.handleSubmit.bind(this);
-      // this.addNode = this.addNode.bind(this);
   };
 
   handleChange(event) {
@@ -47,16 +48,6 @@ class AppForm extends Component {
     }));
   };
 
-  // addNode() {
-  //   this.setState((prevState) => ({
-  //     ...prevState,
-  //     nodes: [
-  //       ...prevState.nodes,
-  //       {node: ''},
-  //     ],
-  //   }));
-  // }
-
   handleSubmit(event) {
     event.preventDefault()
 
@@ -80,10 +71,7 @@ class AppForm extends Component {
   handleRunExecProfiler(event) {
     axios.post(`http://localhost:5000/run_exec_profiler`, '')
     .then((res) => { 
-      var processed_info = JSON.parse(res.data.exec_profiler_info)
-
-      console.log(processed_info)
-      console.log(typeof(processed_info))
+      var processed_info = JSON.parse(res.data.exec_profiler_info.home)
       this.setState((state) => ({
         ...state,
         exec_profiler_info: processed_info,
@@ -91,16 +79,18 @@ class AppForm extends Component {
     })
   }
 
-  handleDemo(event) {
-    axios.get(`http://localhost:5000/show_demo`)
+  handlePlot(event) {
+    axios.get("http://localhost:5000/plot")
+    .then(resp =>
+      console.log(resp.data)
+      // window.Bokeh.embed.embed_item(resp.data, 'testPlot')
+    )
   }
 
-  // handleTaskStatistics(event) {
-  //   axios.post(`http://localhost:5000/get_task_statistics`, '')
-  //   .then((res) => {
-  //     console.log(res)
-  //   })
-  // }
+  handleDemo(event) {
+    axios.get("http://localhost:5000/show_demo")
+  }
+
 
   render() {
     var info = this.state.exec_profiler_info;
@@ -197,7 +187,7 @@ class AppForm extends Component {
                   <th scope="col">Output_data (Kbit)</th>
                 </tr>
               </thead>
-              { result.length == 0 ? (
+              { result.length === 0 ? (
                   <tbody>
                     <th className="font-weight-normal">N/A</th>
                     <th className="font-weight-normal">N/A</th>
@@ -225,7 +215,9 @@ class AppForm extends Component {
 
         <div className="mqtt mb-4">
           <h4 className="mb-3">Test mqtt with Jupiter running pods</h4>
-          <button className="btn btn-outline-primary" onClick={this.handleDemo}>Start and keep listening to Jupiter</button>
+          <button className="btn btn-outline-primary mr-2" onClick={this.handlePlot}>Get Plot</button>
+          <a href="http://localhost:5000/plot">Please see plots in a new window by click on this link.</a>
+          <div id='testPlot' className="bk-root"></div>
         </div>
 
         <div className="network mb-4">

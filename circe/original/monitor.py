@@ -31,9 +31,12 @@ import urllib.request
 import configparser
 import numpy as np
 from collections import defaultdict
+import paho.mqtt.client as mqtt
 
 global bottleneck
 bottleneck = defaultdict(list)
+
+BOKEH = 1
 
 def tic():
     return time.time()
@@ -58,9 +61,9 @@ def send_monitor_data(msg):
         Exception: if sending message to flask server on home is failed
     """
     try:
-        print('***************************************************')
-        t = tic()
-        print("Sending monitor message", msg)
+        # print('***************************************************')
+        # t = tic()
+        # print("Sending monitor message", msg)
         url = "http://" + home_node_host_port + "/recv_monitor_data"
         params = {'msg': msg, "work_node": taskname}
         params = urllib.parse.urlencode(params)
@@ -68,10 +71,10 @@ def send_monitor_data(msg):
         res = urllib.request.urlopen(req)
         res = res.read()
         res = res.decode('utf-8')
-        txec = toc(t)
-        bottleneck['sendmsg'].append(txec)
-        print(np.mean(bottleneck['sendmsg']))
-        print('***************************************************')
+        # txec = toc(t)
+        # bottleneck['sendmsg'].append(txec)
+        # print(np.mean(bottleneck['sendmsg']))
+        # print('***************************************************')
     except Exception as e:
         print("Sending message to flask server on home FAILED!!!")
         print(e)
@@ -92,9 +95,9 @@ def send_runtime_profile(msg):
         Exception: if sending message to flask server on home is failed
     """
     try:
-        print('***************************************************')
-        t = tic()
-        print("Sending runtime message", msg)
+        # print('***************************************************')
+        # t = tic()
+        # print("Sending runtime message", msg)
         url = "http://" + home_node_host_port + "/recv_runtime_profile"
         print(url)
         params = {'msg': msg, "work_node": taskname}
@@ -105,11 +108,11 @@ def send_runtime_profile(msg):
         print(res)
         res = res.read()
         res = res.decode('utf-8')
-        print(res)
-        txec = toc(t)
-        bottleneck['sendruntime'].append(txec)
-        print(np.mean(bottleneck['sendruntime']))
-        print('***************************************************')
+        # print(res)
+        # txec = toc(t)
+        # bottleneck['sendruntime'].append(txec)
+        # print(np.mean(bottleneck['sendruntime']))
+        # print('***************************************************')
     except Exception as e:
         print("Sending runtime profiling info to flask server on home FAILED!!!")
         print(e)
@@ -128,10 +131,10 @@ def transfer_data_scp(IP,user,pword,source, destination):
     """
     #Keep retrying in case the containers are still building/booting up on
     #the child nodes.
-    print('***************************************************')
-    print('Transfer data')
-    t = tic()
-    print(IP)
+    # print('***************************************************')
+    # print('Transfer data')
+    # t = tic()
+    # print(IP)
     retry = 0
     ts = -1
     while retry < num_retries:
@@ -148,10 +151,10 @@ def transfer_data_scp(IP,user,pword,source, destination):
             print('profiler_worker.txt: SSH Connection refused or File transfer failed, will retry in 2 seconds')
             time.sleep(2)
             retry += 1
-    txec = toc(t)
-    bottleneck['transfer'].append(txec)
-    print(np.mean(bottleneck['transfer']))
-    print('***************************************************')
+    # txec = toc(t)
+    # bottleneck['transfer'].append(txec)
+    # print(np.mean(bottleneck['transfer']))
+    # print('***************************************************')
     if retry == num_retries:
         s = "{:<10} {:<10} {:<10} {:<10} \n".format(node_name,transfer_type,source,ts)
         runtime_sender_log.write(s)
@@ -168,7 +171,7 @@ def transfer_data(IP,user,pword,source, destination):
         destination (str): destination file path
     """
     msg = 'Transfer to IP: %s , username: %s , password: %s, source path: %s , destination path: %s'%(IP,user,pword,source, destination)
-    print(msg)
+    # print(msg)
     
 
     if TRANSFER == 0:
@@ -222,10 +225,16 @@ def multicast_data(IP_list,user_list,pword_list,source, destination):
     """
     for IP,idx in enumerate(IP_list):
         msg = 'Transfer to IP: %s , username: %s , password: %s, source path: %s , destination path: %s'%(IP_list[idx],user_list[idx],pword_list[idx],source, destination)
-    print(msg)
+    # print(msg)
     if TRANSFER==0:
         return multicast_data_scp
     return multicast_data_scp
+
+def demo_help(server,port,topic,msg):
+    client = mqtt.Client()
+    client.connect(server, port, 60)
+    client.publish(topic, msg, qos=1)
+    client.disconnect()
 
 #for OUTPUT folder 
 class Watcher1():
@@ -265,12 +274,12 @@ class Handler1(FileSystemEventHandler):
 
         elif event.event_type == 'created':
 
-            print('***************************************************')
+            # print('***************************************************')
             
             
              
             print("Received file as output - %s." % event.src_path)
-            t = tic()
+            # t = tic()
 
             #Runtime profiler (finished_time)
             
@@ -301,11 +310,17 @@ class Handler1(FileSystemEventHandler):
             flag2 = sys.argv[2]
 
             #if you are sending the final output back to scheduler
-            print(time.time()-t1)
-            t1 = time.time()
+            # print(time.time()-t1)
+            # t1 = time.time()
             
+            ts = time.time()
             if sys.argv[3] == 'home':
-                
+
+                if BOKEH == 1:
+                    #msg = taskname + " ends "+str(ts)
+                    msg = taskname + " ends"
+                    demo_help(BOKEH_SERVER,BOKEH_PORT,"JUPITER",msg)
+
                 IPaddr = sys.argv[4]
                 user = sys.argv[5]
                 password=sys.argv[6]
@@ -315,6 +330,11 @@ class Handler1(FileSystemEventHandler):
                 
 
             elif flag2 == 'true':
+
+                if BOKEH == 1:
+                    #msg = taskname + " ends "+str(ts)
+                    msg = taskname + " ends"
+                    demo_help(BOKEH_SERVER,BOKEH_PORT,"JUPITER",msg)
 
                 for i in range(3, len(sys.argv)-1,4):
                     IPaddr = sys.argv[i+1]
@@ -330,7 +350,11 @@ class Handler1(FileSystemEventHandler):
 
                 if (len(files_out) == num_child):
 
-                
+                    if BOKEH == 1:
+                        #msg = taskname + " ends "+str(ts)
+                        msg = taskname + " ends"
+                        demo_help(BOKEH_SERVER,BOKEH_PORT,"JUPITER",msg)
+
                     for i in range(3, len(sys.argv)-1,4):
                         myfile = files_out.pop(0)
                         event_path = os.path.join(''.join(os.path.split(event.src_path)[:-1]), myfile)
@@ -343,12 +367,12 @@ class Handler1(FileSystemEventHandler):
 
                     files_out=[]
 
-            print(time.time()-t1)
+            # print(time.time()-t1)
 
-            txec = toc(t)
-            bottleneck['receiveoutput'].append(txec)
-            print(np.mean(bottleneck['receiveoutput']))
-            print('***************************************************')
+            # txec = toc(t)
+            # bottleneck['receiveoutput'].append(txec)
+            # print(np.mean(bottleneck['receiveoutput']))
+            # print('***************************************************')
 
 
 #for INPUT folder
@@ -387,7 +411,7 @@ class Handler(FileSystemEventHandler):
 
         elif event.event_type == 'created':
 
-            print('***************************************************')
+            # print('***************************************************')
             print("Received file as input - %s." % event.src_path)
             t = tic()
             new_file = os.path.split(event.src_path)[-1]
@@ -431,6 +455,12 @@ class Handler(FileSystemEventHandler):
                 ts = time.time()
                 runtime_info = 'rt_exec '+ temp_name+ ' '+str(ts)
                 send_runtime_profile(runtime_info)
+
+                if BOKEH == 1:
+                    # msg = taskname + " starts "+str(ts)
+                    msg = taskname + " starts"
+                    demo_help(BOKEH_SERVER,BOKEH_PORT,"JUPITER",msg)
+
                 inputfile=queue_mul.get()
                 input_path = os.path.split(event.src_path)[0]
                 output_path = os.path.join(os.path.split(input_path)[0],'output')
@@ -449,6 +479,12 @@ class Handler(FileSystemEventHandler):
                     ts = time.time()
                     runtime_info = 'rt_exec '+ temp_name+ ' '+str(ts)
                     send_runtime_profile(runtime_info)
+
+                    if BOKEH == 1:
+                        # msg = taskname + " starts "+str(ts)
+                        msg = taskname + " starts"
+                        demo_help(BOKEH_SERVER,BOKEH_PORT,"JUPITER",msg)
+
                     input_path = os.path.split(event.src_path)[0]
                     output_path = os.path.join(os.path.split(input_path)[0],'output')
 
@@ -460,11 +496,11 @@ class Handler(FileSystemEventHandler):
                     runtime_info = 'rt_finish '+ temp_name+ ' '+str(ts)
                     send_runtime_profile(runtime_info)
                     # end msg
-            print(time.time()-t1)
-            txec = toc(t)
-            bottleneck['receiveinput'].append(txec)
-            print(np.mean(bottleneck['receiveinput']))
-            print('***************************************************')
+            # print(time.time()-t1)
+            # txec = toc(t)
+            # bottleneck['receiveinput'].append(txec)
+            # print(np.mean(bottleneck['receiveinput']))
+            # print('***************************************************')
 
 def main():
     """
@@ -533,7 +569,10 @@ def main():
     all_nodes = os.environ["ALL_NODES"].split(":")
     all_nodes_ips = os.environ["ALL_NODES_IPS"].split(":")
 
-    
+    global BOKEH_SERVER, BOKEH_PORT, BOKEH
+    BOKEH_SERVER = config['OTHER']['BOKEH_SERVER']
+    BOKEH_PORT = int(config['OTHER']['BOKEH_PORT'])
+    BOKEH = int(config['OTHER']['BOKEH'])
 
 
     if taskmap[1] == True:

@@ -1,7 +1,6 @@
 import React, { Component } from 'react';
 import axios from 'axios';
 import './AppForm.css';
-import Iframe from 'react-iframe';
 
 
 class AppForm extends Component {
@@ -82,8 +81,8 @@ class AppForm extends Component {
   handlePlot(event) {
     axios.get("http://localhost:5000/plot")
     .then(resp =>
-      console.log(resp.data)
-      // window.Bokeh.embed.embed_item(resp.data, 'testPlot')
+      // console.log(resp.data),
+      window.Bokeh.embed.embed_item(resp.data, 'testPlot')
     )
   }
 
@@ -189,10 +188,12 @@ class AppForm extends Component {
               </thead>
               { result.length === 0 ? (
                   <tbody>
-                    <th className="font-weight-normal">N/A</th>
-                    <th className="font-weight-normal">N/A</th>
-                    <th className="font-weight-normal">N/A</th>
-                    <th className="font-weight-normal">N/A</th>
+                    <tr>
+                      <th className="font-weight-normal">N/A</th>
+                      <th className="font-weight-normal">N/A</th>
+                      <th className="font-weight-normal">N/A</th>
+                      <th className="font-weight-normal">N/A</th>
+                    </tr>
                   </tbody>
                   ) : (
                   <tbody>

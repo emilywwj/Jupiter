@@ -15,6 +15,8 @@ import demo
 from bokeh.embed import server_document
 from bokeh.server.server import Server
 from tornado.ioloop import IOLoop
+from bokeh.application import Application
+from bokeh.application.handlers.function import FunctionHandler
 
 
 cors = CORS()
@@ -106,11 +108,12 @@ def get_exec_profile_info():
         file_exist = False
         while not file_exist:
             try:
-                f = open('profiler_%s.txt'%(node))
+                f = open('profiler_home.txt')
+                # f = open('profiler_%s.txt'%(node))
                 lines = f.readlines()
                 lines.pop(0)
                 json_string = json.dumps(lines)
-                response_object["exec_profiler_info"][node] = json_string
+                response_object["exec_profiler_info"]['home'] = json_string
                 file_exist = True
             except FileNotFoundError:
                 print("The execute information is not ready.")
@@ -153,34 +156,6 @@ def read_node_list(path2):
         nodes.append(node_line[0])
     return nodes
 
-
-# *******************************************
-def modify_doc(doc):
-    layout = demo.run_demo(doc)
-    doc.add_root(layout)
-    doc.add_periodic_callback(demo.update, 50) 
-
-def demo_worker():
-    # Can't pass num_procs > 1 in this configuration. If you need to run multiple
-    # processes, see e.g. flask_gunicorn_embed.py
-    server = Server({'/demo': modify_doc}, io_loop=IOLoop(), allow_websocket_origin=["localhost:5000"])
-    server.start()
-    server.io_loop.start()
-
-from threading import Thread
-print("Start the thread for demo.")
-Thread(target=demo_worker).start()
-
-
-@app.route('/plot')
-def demo_page():
-
-    script = server_document('http://localhost:5006/demo')
-    # print("Check demo page at http://localhost:5000/plot")
-    return render_template("test.html", script=script, template="Flask")
-
-
-
 # def get_plot():
 # #     post_data = request.get_json()
 # #     p = None
@@ -191,6 +166,20 @@ def demo_page():
 #     #  + pass plot object 'p' into json_item
 #     #  + wrap the result in json.dumps and return to frontend
 #     return json.dumps(json_item(p, "myplot"))
+
+
+
+@app.route('/plot')
+def demo_worker():
+    # Can't pass num_procs > 1 in this configuration. If you need to run multiple
+    # processes, see e.g. flask_gunicorn_embed.py
+    apps = {'/demo': Application(FunctionHandler(modify_doc))}
+    server = Server(apps, io_loop=IOLoop(), port=5006)
+    server.start()
+    server.io_loop.start()
+
+def modify_doc(doc):
+    demo.main(doc)
 
 
 @app.route('/show_demo', methods=['GET', 'POST'])

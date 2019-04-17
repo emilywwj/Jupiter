@@ -8,8 +8,8 @@ simpledetector1,15,7.6160000000000005
 simpledetector2,15,7.168
 astutedetector0,15,4.152
 astutedetector1,15,3.48
-astutedetector2,15,4.704
+astutedetector2,15,4.728
 fusioncenter0,10,0.984
 fusioncenter1,10,0.44
-fusioncenter2,10,0.768
-globalfusion,10,1.312
+fusioncenter2,10,0.792
+globalfusion,10,1.336

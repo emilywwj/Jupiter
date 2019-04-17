@@ -33,245 +33,257 @@ import datetime
 import collections
 from pytz import timezone
 
+# from threading import Thread
+
+# def mqtt_task(m):
+#     try:
+#         m.client.connect(m.server, m.port, m.timeout)
+#         m.client.loop_forever()
+#     except:
+#         print("connection failed")
 
 
-class mq():
+def main(doc=curdoc()):
+
+    class mq():
 
 
-    def __init__(self,outfname,subs,server,port,timeout,looptimeout):
-        self.OUTFNAME = outfname
-        self.subs = subs
-        self.server = server
-        self.port = port
-        self.timeout = timeout
-        self.looptimeout = looptimeout
-        self.outf = open(OUTFNAME,'a')
-        self.client = mqtt.Client()
-        self.client.on_connect = self.on_connect
-        self.client.on_message = self.on_message
-        try:
-            self.client.connect(self.server, self.port, self.timeout)
-        except:
-            print("connection failed")
+        def __init__(self,outfname,subs,server,port,timeout,looptimeout):
+            self.OUTFNAME = outfname
+            self.subs = subs
+            self.server = server
+            self.port = port
+            self.timeout = timeout
+            self.looptimeout = looptimeout
+            self.outf = open(OUTFNAME,'a')
+            self.client = mqtt.Client()
+            self.client.on_connect = self.on_connect
+            self.client.on_message = self.on_message
+            try:
+                self.client.connect(self.server, self.port, self.timeout)
+            except:
+                print("connection failed")
 
-    # The callback for when the client receives a CONNACK response from the server.
-    def on_connect(self,client, userdata, flags, rc):
-        # Subscribing in on_connect() means that if we lose the connection and
-        # reconnect then subscriptions will be renewed.
-        subres = client.subscribe(self.subs,qos=1)
-        print("Connected with result code "+str(rc))
-
-
-    # The callback for when a PUBLISH message is received from the server.
-    def on_message(self,client, userdata, msg):
-        start_messages = ['localpro starts', 'aggregate0 starts', 'aggregate1 starts', 'aggregate2 starts',
-        'simpledetector0 starts', 'simpledetector1 starts', 'simpledetector2 starts', 'astutedetector0 starts',
-        'astutedetector1 starts', 'astutedetector2 starts', 'fusioncenter0 starts', 'fusioncenter1 starts', 
-        'fusioncenter2 starts', 'globalfusion starts']
-
-        end_messages = ['localpro ends', 'aggregate0 ends', 'aggregate1 ends', 'aggregate2 ends',
-        'simpledetector0 ends', 'simpledetector1 ends', 'simpledetector2 ends', 'astutedetector0 ends',
-        'astutedetector1 ends', 'astutedetector2 ends', 'fusioncenter0 ends', 'fusioncenter1 ends', 
-        'fusioncenter2 ends', 'globalfusion ends']
+        # The callback for when the client receives a CONNACK response from the server.
+        def on_connect(self,client, userdata, flags, rc):
+            # Subscribing in on_connect() means that if we lose the connection and
+            # reconnect then subscriptions will be renewed.
+            subres = client.subscribe(self.subs,qos=1)
+            print("Connected with result code "+str(rc))
 
 
-        top_dag=[5.15, 4.15, 4.15, 4.15, 3.15, 3.15, 3.15, 3.15, 3.15, 3.15, 2.15,2.15,2.15,1.15]
-        bottom_dag=[4.85, 3.85,3.85,3.85, 2.85,2.85,2.85,2.85,2.85,2.85, 1.85,1.85,1.85, 0.85]
-        left_dag= [3.3,1.3,3.3,5.3, 0.8, 1.8, 2.8, 3.8, 4.8,5.8, 1.3,3.3,5.3,3.3]
-        right_dag=[3.7,1.7,3.7,5.7, 1.2, 2.2, 3.2, 4.2, 5.2, 6.2,1.7,3.7,5.7,3.7]
+        # The callback for when a PUBLISH message is received from the server.
+        def on_message(self,client, userdata, msg):
+            start_messages = ['localpro starts', 'aggregate0 starts', 'aggregate1 starts', 'aggregate2 starts',
+            'simpledetector0 starts', 'simpledetector1 starts', 'simpledetector2 starts', 'astutedetector0 starts',
+            'astutedetector1 starts', 'astutedetector2 starts', 'fusioncenter0 starts', 'fusioncenter1 starts', 
+            'fusioncenter2 starts', 'globalfusion starts']
+
+            end_messages = ['localpro ends', 'aggregate0 ends', 'aggregate1 ends', 'aggregate2 ends',
+            'simpledetector0 ends', 'simpledetector1 ends', 'simpledetector2 ends', 'astutedetector0 ends',
+            'astutedetector1 ends', 'astutedetector2 ends', 'fusioncenter0 ends', 'fusioncenter1 ends', 
+            'fusioncenter2 ends', 'globalfusion ends']
 
 
-        message = msg.payload.decode()
-        global start_time
-        global finish_time
-        global total_time
-
-        print('--------------')
-        print(message)
-        print('--------------')
-        if message in start_messages:
-            index = start_messages.index(message)
-            topd,bottomd,leftd,rightd = top_dag[index],bottom_dag[index],left_dag[index],right_dag[index]
-            color = "red"
-            doc.add_next_tick_callback(partial(update3, top= topd, bottom=bottomd,left=leftd,right=rightd, color=color))
-            
-
-        elif message in end_messages:
-
-            index = end_messages.index(message)
-            topd,bottomd,leftd,rightd = top_dag[index],bottom_dag[index],left_dag[index],right_dag[index]
+            top_dag=[5.15, 4.15, 4.15, 4.15, 3.15, 3.15, 3.15, 3.15, 3.15, 3.15, 2.15,2.15,2.15,1.15]
+            bottom_dag=[4.85, 3.85,3.85,3.85, 2.85,2.85,2.85,2.85,2.85,2.85, 1.85,1.85,1.85, 0.85]
+            left_dag= [3.3,1.3,3.3,5.3, 0.8, 1.8, 2.8, 3.8, 4.8,5.8, 1.3,3.3,5.3,3.3]
+            right_dag=[3.7,1.7,3.7,5.7, 1.2, 2.2, 3.2, 4.2, 5.2, 6.2,1.7,3.7,5.7,3.7]
 
 
-            color=['#C2D2F9',"#5984E8","#5984E8","#5984E8","#9380F0","#9380F0","#9380F0",
-            "#1906BF","#1906BF","#1906BF", '#084594','#084594','#084594',"#33148E"]
-            color1=["#C2D2F9","#5984E8","#5984E8","#5984E8","#9380F0","#1906BF","#9380F0",
-            "#1906BF","#9380F0","#1906BF","#084594","#084594","#084594","#33148E"]
+            message = msg.payload.decode()
+            global start_time
+            global finish_time
+            global total_time
 
-            doc.add_next_tick_callback(partial(update3, top= topd, bottom=bottomd,left=leftd,right=rightd, color=color1[index]))
+            print('--------------')
+            print(message)
+            print('--------------')
+            if message in start_messages:
+                index = start_messages.index(message)
+                topd,bottomd,leftd,rightd = top_dag[index],bottom_dag[index],left_dag[index],right_dag[index]
+                color = "red"
+                doc.add_next_tick_callback(partial(update3, top= topd, bottom=bottomd,left=leftd,right=rightd, color=color))
+                
 
-        elif message.startswith('mapping'):
-            print('---- Receive task mapping')
-            doc.add_next_tick_callback(partial(update5,new=message,old=source6_df,attr=source6.data))
-            doc.add_next_tick_callback(partial(update4,new=message,old=source5_df,attr=data_table2.source))
-        elif message.startswith('runtime'):
-            print('---- Receive runtime statistics')
-            doc.add_next_tick_callback(partial(update8,new=message,old=source8_df,attr=data_table4.source))
-        elif message.startswith('global'):
-            print('-----Receive global information')
-            doc.add_next_tick_callback(partial(update7,new=message,old=source7_df,attr=data_table3.source))
+            elif message in end_messages:
 
-
-def retrieve_tasks(dag_info_file):
-    config_file = open(dag_info_file,'r')
-    dag_size = int(config_file.readline())
-
-    tasks={}
-    for i, line in enumerate(config_file, 1):
-        dag_line = line.strip().split(" ")
-        tasks[dag_line[0]]=i 
-        if i == dag_size:
-            break
-    return tasks
-
-def k8s_get_nodes(node_info_file):
-    """read the node info from the file input
-  
-    Args:
-        node_info_file (str): path of ``node.txt``
-  
-    Returns:
-        dict: node information 
-    """
-
-    nodes = {}
-    node_file = open(node_info_file, "r")
-    for i,line in enumerate(node_file):
-        node_line = line.strip().split(" ")
-        nodes[i] = [node_line[0],node_line[1]]    
-    return nodes
+                index = end_messages.index(message)
+                topd,bottomd,leftd,rightd = top_dag[index],bottom_dag[index],left_dag[index],right_dag[index]
 
 
-def repeatlist(it, count):
-    return islice(cycle(it), count)
+                color=['#C2D2F9',"#5984E8","#5984E8","#5984E8","#9380F0","#9380F0","#9380F0",
+                "#1906BF","#1906BF","#1906BF", '#084594','#084594','#084594',"#33148E"]
+                color1=["#C2D2F9","#5984E8","#5984E8","#5984E8","#9380F0","#1906BF","#9380F0",
+                "#1906BF","#9380F0","#1906BF","#084594","#084594","#084594","#33148E"]
 
-def update():
-    m.client.loop(timeout=0.5)
+                doc.add_next_tick_callback(partial(update3, top= topd, bottom=bottomd,left=leftd,right=rightd, color=color1[index]))
 
-# @gen.coroutine
-# def update1(top,bottom,right,left,color):
-#     source.stream(dict(top=[top], bottom=[bottom],left=[left],right=[right],color=[color],line_color=["black"], line_width=[2]))
-
-@gen.coroutine
-def update2(x,y,time):
-    source1.stream(dict(x=[x], y=[y], time=[time], text_font_style= ['bold']))
-
-@gen.coroutine
-def update3(top,bottom,left,right,color):
-    source2.stream(dict(top=[top], bottom=[bottom],left=[left],right=[right],color=[color]))
-
-@gen.coroutine
-def update4(attr, old, new):
-    print("DEBUGG: " + str(new))
-    assigned_info = new.split(' ')[1:]
-    for info in assigned_info:
-        tmp = info.split(':')
-        new_source5_df.loc[new_source5_df.task_names==tmp[0],'assigned']=tmp[1]
-        new_source5_df.loc[new_source5_df.task_names==tmp[0],'as_time']=convert_time(tmp[2])
-
-    source5.data = {
-        'task_id'       : new_source5_df.task_id,
-        'task_names'    : new_source5_df.task_names,
-        'assigned'      : new_source5_df.assigned,
-        'as_time'       : new_source5_df.as_time
-    }
-
-@gen.coroutine
-def update5(attr, old, new):
-    assigned_info = new.split(' ')[1:]
-    
-    for info in assigned_info:
-        tmp = info.split(':')
-        t = '_T'+str(tasks[tmp[0]])
-        n = 'N'+str(node_short.index(tmp[1]))
-        new_source6_df.loc[new_source6_df.nodes==n,'assigned_task']=new_source6_df.loc[new_source6_df.nodes==n,'assigned_task']+t
-    source6.data = {
-        'x' : new_source6_df.x,
-        'y' : new_source6_df.y,
-        'color':new_source6_df.color,
-        'nodes':new_source6_df.nodes,
-        'x_label':new_source6_df.x_label,
-        'y_label':new_source6_df.y_label,
-        'assigned_task':new_source6_df.assigned_task    
-    }
-
-@gen.coroutine
-def update7(attr, old, new):
-
-    tmp = new.split(' ')[1:]
-    home_id = tmp[0]
-    if tmp[1]=='start':
-        data = ['N/A','N/A',tmp[2],tmp[0],convert_time(tmp[3])]
-        new_source7_df.loc[len(new_source7_df),:]=data
-    else:
-        new_source7_df.loc[(new_source7_df.home_id==tmp[0]) & (new_source7_df.global_input==tmp[2]),'end_times']=convert_time(tmp[3])
-        tmp1 = new_source7_df.loc[(new_source7_df.home_id==tmp[0]) & (new_source7_df.global_input==tmp[2]),'end_times']
-        tmp2 = new_source7_df.loc[(new_source7_df.home_id==tmp[0]) & (new_source7_df.global_input==tmp[2]),'start_times'] 
-        new_source7_df.loc[(new_source7_df.home_id==tmp[0]) & (new_source7_df.global_input==tmp[2]),'exec_times']=time_delta(tmp1,tmp2)
-    source7.data = {
-        'home_id'       : new_source7_df.home_id,
-        'global_input'  : new_source7_df.global_input,
-        'start_times'   : new_source7_df.start_times,
-        'end_times'     : new_source7_df.end_times,
-        'exec_times'    : new_source7_df.exec_times,
-    }
-
-@gen.coroutine
-def update8(attr, old, new):
-    tmp = new.split(' ')[1:]
-    if tmp[0]=='enter':
-        data = ['N/A','N/A',convert_time(tmp[3]),'N/A','N/A',tmp[2],'N/A',tmp[1]]
-        new_source8_df.loc[len(new_source8_df),:]=data    
-    elif tmp[0]=='exec':
-        new_source8_df.loc[(new_source8_df.task_name==tmp[1]) & (new_source8_df.local_input==tmp[2]),'local_exec_times']=convert_time(tmp[3])
-        tmp1 = new_source8_df.loc[(new_source8_df.task_name==tmp[1]) & (new_source8_df.local_input==tmp[2]),'local_exec_times']
-        tmp2 = new_source8_df.loc[(new_source8_df.task_name==tmp[1]) & (new_source8_df.local_input==tmp[2]),'local_enter_times']
-        new_source8_df.loc[(new_source8_df.task_name==tmp[1]) & (new_source8_df.local_input==tmp[2]),'local_waiting_times']=time_delta(tmp1,tmp2)    
-    else:
-        new_source8_df.loc[(new_source8_df.task_name==tmp[1]) & (new_source8_df.local_input==tmp[2]),'local_finish_times']=convert_time(tmp[3])
-        tmp1 = new_source8_df.loc[(new_source8_df.task_name==tmp[1]) & (new_source8_df.local_input==tmp[2]),'local_finish_times']
-        tmp2 = new_source8_df.loc[(new_source8_df.task_name==tmp[1]) & (new_source8_df.local_input==tmp[2]),'local_enter_times']
-        tmp3 = new_source8_df.loc[(new_source8_df.task_name==tmp[1]) & (new_source8_df.local_input==tmp[2]),'local_exec_times']
-        new_source8_df.loc[(new_source8_df.task_name==tmp[1]) & (new_source8_df.local_input==tmp[2]),'local_elapse_times']=time_delta(tmp1,tmp2)   
-        new_source8_df.loc[(new_source8_df.task_name==tmp[1]) & (new_source8_df.local_input==tmp[2]),'local_duration_times']=time_delta(tmp1,tmp3) 
-
-    source8.data = {
-        'local_duration_times'  : new_source8_df.local_duration_times,
-        'local_elapse_times'    : new_source8_df.local_elapse_times,
-        'local_enter_times'     : new_source8_df.local_enter_times,
-        'local_exec_times'      : new_source8_df.local_exec_times,
-        'local_finish_times'    : new_source8_df.local_finish_times,
-        'local_input'           : new_source8_df.local_input,
-        'local_waiting_times'   : new_source8_df.local_waiting_times,
-        'task_name'             : new_source8_df.task_name
-    }
+            elif message.startswith('mappings'):
+                print('---- Receive task mapping')
+                doc.add_next_tick_callback(partial(update5,new=message,old=source6_df,attr=source6.data))
+                doc.add_next_tick_callback(partial(update4,new=message,old=source5_df,attr=data_table2.source))
+            elif message.startswith('runtime'):
+                print('---- Receive runtime statistics')
+                doc.add_next_tick_callback(partial(update8,new=message,old=source8_df,attr=data_table4.source))
+            elif message.startswith('global'):
+                print('-----Receive global information')
+                doc.add_next_tick_callback(partial(update7,new=message,old=source7_df,attr=data_table3.source))
 
 
+    def retrieve_tasks(dag_info_file):
+        config_file = open(dag_info_file,'r')
+        dag_size = int(config_file.readline())
+
+        tasks={}
+        for i, line in enumerate(config_file, 1):
+            dag_line = line.strip().split(" ")
+            tasks[dag_line[0]]=i 
+            if i == dag_size:
+                break
+        return tasks
+
+    def k8s_get_nodes(node_info_file):
+        """read the node info from the file input
+      
+        Args:
+            node_info_file (str): path of ``node.txt``
+      
+        Returns:
+            dict: node information 
+        """
+
+        nodes = {}
+        node_file = open(node_info_file, "r")
+        for i,line in enumerate(node_file):
+            node_line = line.strip().split(" ")
+            nodes[i] = [node_line[0],node_line[1]]    
+        return nodes
 
 
-def convert_time(t):
-    return datetime.datetime.fromtimestamp(float(t)).strftime("%d.%m.%y %H:%M:%S")
-def time_delta(end,start): 
-    tmp1 = datetime.datetime.strptime(end.iloc[0],"%d.%m.%y %H:%M:%S")
-    tmp2 = datetime.datetime.strptime(start.iloc[0],"%d.%m.%y %H:%M:%S")
-    delta = (tmp1-tmp2).total_seconds()
-    return delta
+    def repeatlist(it, count):
+        return islice(cycle(it), count)
 
-###################################################################################################
+    def update():
+        m.client.loop(timeout=0.5)
 
-def run_demo(doc):
+    # @gen.coroutine
+    # def update1(top,bottom,right,left,color):
+    #     source.stream(dict(top=[top], bottom=[bottom],left=[left],right=[right],color=[color],line_color=["black"], line_width=[2]))
+
+    @gen.coroutine
+    def update2(x,y,time):
+        source1.stream(dict(x=[x], y=[y], time=[time], text_font_style= ['bold']))
+
+    @gen.coroutine
+    def update3(top,bottom,left,right,color):
+        source2.stream(dict(top=[top], bottom=[bottom],left=[left],right=[right],color=[color]))
+
+    @gen.coroutine
+    def update4(attr, old, new):
+        print("Call update4!")
+        assigned_info = new.split(' ')[1:]
+        for info in assigned_info:
+            tmp = info.split(':')
+            new_source5_df.loc[new_source5_df.task_names==tmp[0],'assigned']=tmp[1]
+            new_source5_df.loc[new_source5_df.task_names==tmp[0],'as_time']=convert_time(tmp[2])
+
+        source5.data = {
+            'task_id'       : new_source5_df.task_id,
+            'task_names'    : new_source5_df.task_names,
+            'assigned'      : new_source5_df.assigned,
+            'as_time'       : new_source5_df.as_time
+        }
+
+    @gen.coroutine
+    def update5(attr, old, new):
+        print("Call update5!")
+        assigned_info = new.split(' ')[1:]
+        
+        for info in assigned_info:
+            tmp = info.split(':')
+            t = '_T'+str(tasks[tmp[0]])
+            n = 'N'+str(node_short.index(tmp[1]))
+            new_source6_df.loc[new_source6_df.nodes==n,'assigned_task']=new_source6_df.loc[new_source6_df.nodes==n,'assigned_task']+t
+        source6.data = {
+            'x' : new_source6_df.x,
+            'y' : new_source6_df.y,
+            'color':new_source6_df.color,
+            'nodes':new_source6_df.nodes,
+            'x_label':new_source6_df.x_label,
+            'y_label':new_source6_df.y_label,
+            'assigned_task':new_source6_df.assigned_task    
+        }
+
+    @gen.coroutine
+    def update7(attr, old, new):
+        print("Call update7!")
+        tmp = new.split(' ')[1:]
+        home_id = tmp[0]
+        if tmp[1]=='start':
+            data = ['N/A','N/A',tmp[2],tmp[0],convert_time(tmp[3])]
+            new_source7_df.loc[len(new_source7_df),:]=data
+        else:
+            new_source7_df.loc[(new_source7_df.home_id==tmp[0]) & (new_source7_df.global_input==tmp[2]),'end_times']=convert_time(tmp[3])
+            tmp1 = new_source7_df.loc[(new_source7_df.home_id==tmp[0]) & (new_source7_df.global_input==tmp[2]),'end_times']
+            tmp2 = new_source7_df.loc[(new_source7_df.home_id==tmp[0]) & (new_source7_df.global_input==tmp[2]),'start_times'] 
+            new_source7_df.loc[(new_source7_df.home_id==tmp[0]) & (new_source7_df.global_input==tmp[2]),'exec_times']=time_delta(tmp1,tmp2)
+        source7.data = {
+            'home_id'       : new_source7_df.home_id,
+            'global_input'  : new_source7_df.global_input,
+            'start_times'   : new_source7_df.start_times,
+            'end_times'     : new_source7_df.end_times,
+            'exec_times'    : new_source7_df.exec_times,
+        }
+
+    @gen.coroutine
+    def update8(attr, old, new):
+        tmp = new.split(' ')[1:]
+        if tmp[0]=='enter':
+            data = ['N/A','N/A',convert_time(tmp[3]),'N/A','N/A',tmp[2],'N/A',tmp[1]]
+            new_source8_df.loc[len(new_source8_df),:]=data    
+        elif tmp[0]=='exec':
+            new_source8_df.loc[(new_source8_df.task_name==tmp[1]) & (new_source8_df.local_input==tmp[2]),'local_exec_times']=convert_time(tmp[3])
+            tmp1 = new_source8_df.loc[(new_source8_df.task_name==tmp[1]) & (new_source8_df.local_input==tmp[2]),'local_exec_times']
+            tmp2 = new_source8_df.loc[(new_source8_df.task_name==tmp[1]) & (new_source8_df.local_input==tmp[2]),'local_enter_times']
+            new_source8_df.loc[(new_source8_df.task_name==tmp[1]) & (new_source8_df.local_input==tmp[2]),'local_waiting_times']=time_delta(tmp1,tmp2)    
+        else:
+            new_source8_df.loc[(new_source8_df.task_name==tmp[1]) & (new_source8_df.local_input==tmp[2]),'local_finish_times']=convert_time(tmp[3])
+            tmp1 = new_source8_df.loc[(new_source8_df.task_name==tmp[1]) & (new_source8_df.local_input==tmp[2]),'local_finish_times']
+            tmp2 = new_source8_df.loc[(new_source8_df.task_name==tmp[1]) & (new_source8_df.local_input==tmp[2]),'local_enter_times']
+            tmp3 = new_source8_df.loc[(new_source8_df.task_name==tmp[1]) & (new_source8_df.local_input==tmp[2]),'local_exec_times']
+            new_source8_df.loc[(new_source8_df.task_name==tmp[1]) & (new_source8_df.local_input==tmp[2]),'local_elapse_times']=time_delta(tmp1,tmp2)   
+            new_source8_df.loc[(new_source8_df.task_name==tmp[1]) & (new_source8_df.local_input==tmp[2]),'local_duration_times']=time_delta(tmp1,tmp3) 
+
+        source8.data = {
+            'local_duration_times'  : new_source8_df.local_duration_times,
+            'local_elapse_times'    : new_source8_df.local_elapse_times,
+            'local_enter_times'     : new_source8_df.local_enter_times,
+            'local_exec_times'      : new_source8_df.local_exec_times,
+            'local_finish_times'    : new_source8_df.local_finish_times,
+            'local_input'           : new_source8_df.local_input,
+            'local_waiting_times'   : new_source8_df.local_waiting_times,
+            'task_name'             : new_source8_df.task_name
+        }
+
+
+
+
+    def convert_time(t):
+        return datetime.datetime.fromtimestamp(float(t)).strftime("%d.%m.%y %H:%M:%S")
+    def time_delta(end,start): 
+        tmp1 = datetime.datetime.strptime(end.iloc[0],"%d.%m.%y %H:%M:%S")
+        tmp2 = datetime.datetime.strptime(start.iloc[0],"%d.%m.%y %H:%M:%S")
+        delta = (tmp1-tmp2).total_seconds()
+        return delta
+
+    ###################################################################################################
+
+    # def run_demo(doc):
+    print("DEBUG: RUN demo!")
     global OUTFNAME, SERVER_IP, SUBSCRIPTIONS, DAG_PATH,NODE_PATH
     OUTFNAME = 'demo_original.html'
-    SERVER_IP = "127.0.0.1"
+    SERVER_IP = 'test.mosquitto.org'
     SUBSCRIPTIONS = 'JUPITER'
     DAG_PATH = 'configuration.txt'
     NODE_PATH = '../../nodes.txt'
@@ -284,6 +296,8 @@ def run_demo(doc):
     input_num = 0
 
     global source, source1, source2, source3,source4,source5,source6, source5_df, nodes, m, p,p1
+
+    # doc = curdoc()
 
     source = ColumnDataSource(data=dict(top=[0], bottom=[0],left=[0],right=[0], color=["#9ecae1"],line_color=["black"], line_width=[2]))
     source1 = ColumnDataSource(data=dict(x=[8], y=[3.5], time=[''],text_font_style=['bold']))
@@ -301,7 +315,7 @@ def run_demo(doc):
     # doc = curdoc()
     doc.title = 'CIRCE Visualization'
 
-    m = mq(outfname=OUTFNAME,subs=SUBSCRIPTIONS,server = SERVER_IP,port=1883,timeout=60,looptimeout=1)
+    m = mq(outfname=OUTFNAME,subs=SUBSCRIPTIONS,server=SERVER_IP,port=1883,timeout=60,looptimeout=1)
 
     ###################################################################################################################################
 
@@ -412,9 +426,6 @@ def run_demo(doc):
     data_table4.on_change('source', lambda attr, old, new: update8())
 
     ###################################################################################################################################
-
-    global p1, p2, p3, p4
-    global layout
 
     p1=figure(plot_width=600, plot_height=600)
     p1.background_fill_color = "#EEEDED"
@@ -532,6 +543,13 @@ def run_demo(doc):
     p3 = layout([title3,widgetbox(data_table3)],sizing_mode='fixed')
     p4 = layout([title4,widgetbox(data_table4)],sizing_mode='fixed')
 
-    layout = column(row(p2,p,p1), row(p3,p4))
-    return layout
+    doc_layout = column(row(p2,p), row(p1), row(p3,p4))
+    doc.add_root(doc_layout)
+    doc.add_periodic_callback(update, 50) 
+    return p3
 
+    # m = mq(outfname=OUTFNAME,subs=SUBSCRIPTIONS,server=SERVER_IP,port=1883,timeout=60,looptimeout=1)
+    # thread = Thread(target=mqtt_task(m))
+    # thread.start()
+
+# main(doc)

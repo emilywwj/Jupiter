@@ -98,42 +98,49 @@ def modify_task_mapper_option(file_path, task_mapper_option):
         f.close()
 
 
-@app.route('/run_exec_profiler', methods=['POST'])
+@app.route('/execution_profile', methods=['POST'])
 def get_exec_profile_info():
 
     response_object = {"exec_profiler_info": {}}
     nodes = read_node_list(path.abspath(__file__ + '../../../../../') + "/nodes.txt")
+    # nodes = ['home']
+    print(nodes)
+    get_k8s_exec_info()
 
-    for node in nodes:
-        file_exist = False
-        while not file_exist:
-            try:
-                f = open('profiler_home.txt')
-                # f = open('profiler_%s.txt'%(node))
-                lines = f.readlines()
-                lines.pop(0)
-                json_string = json.dumps(lines)
-                response_object["exec_profiler_info"]['home'] = json_string
-                file_exist = True
-            except FileNotFoundError:
-                print("The execute information is not ready.")
-
-                run_command_get_file('home')
-                time.sleep(5)
-                continue
-
+    res = []
+    try:
+        for i, node in enumerate(nodes):
+            exist = os.path.isfile('profiler_%s.txt'%(node))
+            if not exist:
+                run_command_get_file(node)
+            f = open('profiler_%s.txt'%(node))
+            print("The profiler %s txt file exists."%(node))
+            lines = f.readlines()
+            lines[0] = node
+            json_string = json.dumps(lines)
+            res.append(json_string)
+            # print(res)
+            file_exist = True
+    except FileNotFoundError:
+        response_object["exec_profiler_info"] = "The execute information for is not ready."
+    response_object["exec_profiler_info"] = json.dumps(res)
+    # print(response_object)
     return jsonify(response_object), 201
 
-
-def run_command_get_file(node):
+def get_k8s_exec_info():
     jupiter_config.set_globals()
+
+    global exec_namespace, app_name, exec_home_pod_name
     exec_namespace = jupiter_config.EXEC_NAMESPACE
     app_name = jupiter_config.APP_OPTION
 
-    cmd = "kubectl get pod -l app=%s-%s --namespace=%s -o name" % (app_name, node, exec_namespace)
+    cmd = "kubectl get pod -l app=%s-home --namespace=%s -o name" % (app_name, exec_namespace)
     cmd_output = get_command_output(cmd)
-    pod_name = cmd_output.split('/')[1].split('\\')[0]
-    file_path = '%s/%s:/centralized_scheduler/profiler_files_processed/profiler_%s.txt' % (exec_namespace, pod_name, node)
+
+    exec_home_pod_name = cmd_output.split('/')[1].split('\\')[0]
+
+def run_command_get_file(node):
+    file_path = '%s/%s:/centralized_scheduler/profiler_files_processed/profiler_%s.txt' % (exec_namespace, exec_home_pod_name, node)
     cmd = "kubectl cp " + file_path + " ."
     print("RUN: " + cmd)
     os.system(cmd)
@@ -182,57 +189,27 @@ def modify_doc(doc):
     demo.main(doc)
 
 
-@app.route('/show_demo', methods=['GET', 'POST'])
-def show_demo():
-    import paho.mqtt.client as mqtt
+@app.route('/network_profile', methods=['POST'])
+def get_network_statistics():
 
-    # The callback for when the client receives a CONNACK response from the server.
-    def on_connect(client, userdata, flags, rc):
-        print("Connected with result code " + str(rc))
+    file_exist = False
+    response_object = {"network_statistics": {}}
+    while not file_exist:
+        try:
+            f = open('profiler_home.txt')
+            lines = f.readlines()
+            lines.pop(0)
+            json_string = json.dumps(lines)
+            response_object["network_statistics"] = json_string
+            file_exist = True
+        except FileNotFoundError:
+            print("The execute information is not ready.")
 
-        # Subscribing in on_connect() means that if we lose the connection and
-        # reconnect then subscriptions will be renewed.
-        client.subscribe("JUPITER")
+            run_command_get_file()
+            time.sleep(5)
+            continue
 
-
-    # The callback for when a PUBLISH message is received from the server.
-    def on_message(client, userdata, msg):
-        print(msg.topic + " " + str(msg.payload))
-
-    client = mqtt.Client()
-    client.on_connect = on_connect
-    client.on_message = on_message
-
-    client.connect("test.mosquitto.org", 1883, 60)
-
-    # Blocking call that processes network traffic, dispatches callbacks and
-    # handles reconnecting.
-    # Other loop*() functions are available that give a threaded interface and a
-    # manual interface.
-    client.loop_forever()
-
-
-# @app.route('/get_network_statistics', methods=['POST'])
-# def get_network_statistics():
-
-#     file_exist = False
-#     response_object = {"network_statistics": {}}
-#     while not file_exist:
-#         try:
-#             f = open('profiler_home.txt')
-#             lines = f.readlines()
-#             lines.pop(0)
-#             json_string = json.dumps(lines)
-#             response_object["network_statistics"] = json_string
-#             file_exist = True
-#         except FileNotFoundError:
-#             print("The execute information is not ready.")
-
-#             run_command_get_file()
-#             time.sleep(5)
-#             continue
-
-#     return jsonify(response_object), 201
+    return jsonify(response_object), 201
 
 # def run_command_get_file():
 #     jupiter_config.set_globals()

@@ -2,7 +2,6 @@ import React, { Component } from 'react';
 import axios from 'axios';
 import './AppForm.css';
 
-
 class AppForm extends Component {
   constructor() {
     super();
@@ -19,9 +18,9 @@ class AppForm extends Component {
       this.handleChange = this.handleChange.bind(this);
       this.handleNodesChange = this.handleNodesChange.bind(this);
       this.handleSubmit = this.handleSubmit.bind(this);
-      this.handleRunExecProfiler = this.handleRunExecProfiler.bind(this);
       this.handlePlot = this.handlePlot.bind(this);
-      this.handleDemo = this.handleDemo.bind(this);
+      this.handleGetExecProfile = this.handleGetExecProfile.bind(this);
+      this.handleGetNetworkProfile = this.handleGetNetworkProfile.bind(this);
   };
 
   handleChange(event) {
@@ -67,10 +66,11 @@ class AppForm extends Component {
     .catch((err) => { console.log(err); });
   };
 
-  handleRunExecProfiler(event) {
-    axios.post(`http://localhost:5000/run_exec_profiler`, '')
+  handleGetExecProfile(event) {
+    axios.post(`http://localhost:5000/execution_profile`, '')
     .then((res) => { 
-      var processed_info = JSON.parse(res.data.exec_profiler_info.home)
+      var processed_info = JSON.parse(res.data.exec_profiler_info);
+      //array
       this.setState((state) => ({
         ...state,
         exec_profiler_info: processed_info,
@@ -80,22 +80,36 @@ class AppForm extends Component {
 
   handlePlot(event) {
     axios.get("http://localhost:5000/plot")
-    .then(resp =>
-      // console.log(resp.data),
-      window.Bokeh.embed.embed_item(resp.data, 'testPlot')
-    )
   }
 
-  handleDemo(event) {
-    axios.get("http://localhost:5000/show_demo")
+  handleGetNetworkProfile(event) {
+    axios.get("http://localhost:5000/network_profile")
+    .then((res) => { 
+      var processed_info = JSON.parse(res.data.exec_profiler_info.home)
+      this.setState((state) => ({
+        ...state,
+        exec_profiler_info: processed_info,
+      }))
+    })
   }
 
 
   render() {
-    var info = this.state.exec_profiler_info;
-    var result = [];
-    for(var i in info)
-        result.push(info[i]);
+
+    // modified the data from exec profiler
+    var info_arr = this.state.exec_profiler_info;
+    var exec_info = [];
+    var node = ""
+    for(var j = 0; j < info_arr.length; j++) {
+      var info = JSON.parse(info_arr[j])
+      for(var i in info) {
+        if (i === "0") {
+          node = info[i]
+        } else{
+          exec_info.push(node + "," + info[i])
+        }
+      }
+    }
 
     return (
       <div className="appForm">
@@ -176,47 +190,50 @@ class AppForm extends Component {
             Click this to see the execution time of each task on each node and the amount of data it passes to its child tasks.
           </div>
           <div className="d-flex justify-content-start align-items-center">
-            <button className="btn btn-outline-primary p-3" onClick={this.handleRunExecProfiler}>Run</button>
-            <table className="ml-5">
-              <thead>
-                <tr>
-                  <th scope="col">Node</th>
-                  <th scope="col">Task</th>
-                  <th scope="col">Time (sec)</th>
-                  <th scope="col">Output_data (Kbit)</th>
-                </tr>
-              </thead>
-              { result.length === 0 ? (
-                  <tbody>
-                    <tr>
-                      <th className="font-weight-normal">N/A</th>
-                      <th className="font-weight-normal">N/A</th>
-                      <th className="font-weight-normal">N/A</th>
-                      <th className="font-weight-normal">N/A</th>
-                    </tr>
-                  </tbody>
-                  ) : (
-                  <tbody>
-                  {
-                    result.map((item, key) => {
-                      return <tr key={key}>
-                          <th className="font-weight-normal">home</th>
-                          <th className="font-weight-normal">{item.split(",")[0]}</th>
-                          <th className="font-weight-normal">{item.split(",")[1]}</th>
-                          <th className="font-weight-normal">{item.split(",")[2]}</th>
-                        </tr>;
-                      })
+            <button className="btn btn-outline-primary p-3" onClick={this.handleGetExecProfile}>Run</button>
+            <div className="exec-table-wrapper ml-5">
+              <table className="exec-table">
+                <thead>
+                  <tr>
+                    <th scope="col">Node</th>
+                    <th scope="col">Task</th>
+                    <th scope="col">Time (sec)</th>
+                    <th scope="col">Output_data (Kbit)</th>
+                  </tr>
+                </thead>
+                { exec_info.length === 0 || exec_info === "The execute information for is not ready." ? (
+                    <tbody>
+                      <tr>
+                        <th className="font-weight-normal">N/A</th>
+                        <th className="font-weight-normal">N/A</th>
+                        <th className="font-weight-normal">N/A</th>
+                        <th className="font-weight-normal">N/A</th>
+                      </tr>
+                    </tbody>
+                    ) : (
+                    <tbody>
+                    {
+                      exec_info.map((item, key) => {
+                        console.log(item)
+                        return <tr key={key}>
+                            <th className="font-weight-normal">{item.split(",")[0]}</th>
+                            <th className="font-weight-normal">{item.split(",")[1]}</th>
+                            <th className="font-weight-normal">{item.split(",")[2]}</th>
+                            <th className="font-weight-normal">{item.split(",")[3]}</th>
+                          </tr>;
+                        })
+                    }
+                    </tbody>
+                    )
                   }
-                  </tbody>
-                  )
-                }
-            </table>
+              </table>
+            </div>
           </div>
         </div>
 
         <div className="mqtt mb-4">
-          <h4 className="mb-3">Test mqtt with Jupiter running pods</h4>
-          <button className="btn btn-outline-primary mr-2" onClick={this.handlePlot}>Get Plot</button>
+          <h4 className="mb-3">CIRCE Visualization</h4>
+          <button className="btn btn-outline-primary mr-2" onClick={this.handlePlot}>Get Plots</button>
           <a href="http://localhost:5000/plot">Please see plots in a new window by click on this link.</a>
           <div id='testPlot' className="bk-root"></div>
         </div>

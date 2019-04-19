@@ -16,7 +16,7 @@ $ npm install
 $ npm start
 ```
 
-Now open your browser and check http://localhost to see this web application.
+Now it will open your browser automatically with link to http://localhost:3000 to see this web application.
 
 1)config app_path, select a task mapper, and type in your node information.
 

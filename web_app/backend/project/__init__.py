@@ -182,8 +182,10 @@ def demo_worker():
     # processes, see e.g. flask_gunicorn_embed.py
     apps = {'/demo': Application(FunctionHandler(modify_doc))}
     server = Server(apps, io_loop=IOLoop(), port=5006)
+    print("Start the bokeh server:")
     server.start()
     server.io_loop.start()
+    return
 
 def modify_doc(doc):
     demo.main(doc)

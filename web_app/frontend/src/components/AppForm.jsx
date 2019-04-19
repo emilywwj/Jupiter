@@ -203,7 +203,7 @@ class AppForm extends Component {
         <div className="mqtt mb-4">
           <h4 className="mb-3">CIRCE Visualization</h4>
           <button className="btn btn-outline-primary mr-2" onClick={this.handlePlot}>Get Plots</button>
-          <a href="http://localhost:5000/plot">Please see plots in a new window by click on this link.</a>
+          <a href="http://localhost:5006">Please see plots in a new window by click on this link.</a>
           <div id='testPlot' className="bk-root"></div>
         </div>
 

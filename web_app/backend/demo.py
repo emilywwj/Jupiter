@@ -44,7 +44,7 @@ from pytz import timezone
 
 
 def main(doc=curdoc()):
-
+    print("start main function!")
     class mq():
 
 
@@ -279,11 +279,9 @@ def main(doc=curdoc()):
 
     ###################################################################################################
 
-    # def run_demo(doc):
-    print("DEBUG: RUN demo!")
     global OUTFNAME, SERVER_IP, SUBSCRIPTIONS, DAG_PATH,NODE_PATH
     OUTFNAME = 'demo_original.html'
-    SERVER_IP = 'test.mosquitto.org'
+    SERVER_IP = 'iot.eclipse.org'
     SUBSCRIPTIONS = 'JUPITER'
     DAG_PATH = 'configuration.txt'
     NODE_PATH = '../../nodes.txt'

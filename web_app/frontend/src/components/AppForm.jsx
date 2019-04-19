@@ -14,6 +14,7 @@ class AppForm extends Component {
           nodesDetails: '',
         },
         exec_profiler_info: '',
+        network_profiler_info: '',
       };
       this.handleChange = this.handleChange.bind(this);
       this.handleNodesChange = this.handleNodesChange.bind(this);
@@ -85,10 +86,11 @@ class AppForm extends Component {
   handleGetNetworkProfile(event) {
     axios.get("http://localhost:5000/network_profile")
     .then((res) => { 
-      var processed_info = JSON.parse(res.data.exec_profiler_info.home)
+      var processed_info = JSON.parse(res.data.network_profiler_info)
+      console.log(processed_info)
       this.setState((state) => ({
         ...state,
-        exec_profiler_info: processed_info,
+        network_profiler_info: processed_info,
       }))
     })
   }
@@ -97,11 +99,11 @@ class AppForm extends Component {
   render() {
 
     // modified the data from exec profiler
-    var info_arr = this.state.exec_profiler_info;
+    var exec_info_arr = this.state.exec_profiler_info;
     var exec_info = [];
     var node = ""
-    for(var j = 0; j < info_arr.length; j++) {
-      var info = JSON.parse(info_arr[j])
+    for(var j = 0; j < exec_info_arr.length; j++) {
+      var info = JSON.parse(exec_info_arr[j])
       for(var i in info) {
         if (i === "0") {
           node = info[i]
@@ -111,8 +113,11 @@ class AppForm extends Component {
       }
     }
 
+    var profiler_info_arr = this.state.network_profiler_info;
+
     return (
       <div className="appForm">
+
         <div className="config mb-4">
           <h4 className="mb-3">Config Parameters</h4>
           <div className="subtitle mb-3">
@@ -184,13 +189,32 @@ class AppForm extends Component {
           </form>
         </div>
 
+        <div className="mention mb-4">
+          <h4 className="mb-3">Deploy Jupiter</h4>
+          <div className="mb-2">
+            Please deploy Jupiter according to documents <a href="https://jupiter.readthedocs.io/en/latest/Jdeploy.html">below</a>.
+            <p className="mt-1">
+              Note: Before you run deployment scripts, click on the "Get Plots" button below to see the real-time data in another page.
+            </p>
+          </div>
+          <iframe src="https://jupiter.readthedocs.io/en/latest/Jdeploy.html" name="jupiterDocs" height="500" width="750"></iframe>
+        </div>
+
+        <div className="mqtt mb-4">
+          <h4 className="mb-3">CIRCE Visualization</h4>
+          <button className="btn btn-outline-primary mr-2" onClick={this.handlePlot}>Get Plots</button>
+          <a href="http://localhost:5000/plot">Please see plots in a new window by click on this link.</a>
+          <div id='testPlot' className="bk-root"></div>
+        </div>
+
+
         <div className="exec mb-4">
           <h4 className="mb-3">Run Execution Profiler</h4>
           <div className="subtitle mb-4">
             Click this to see the execution time of each task on each node and the amount of data it passes to its child tasks.
           </div>
           <div className="d-flex justify-content-start align-items-center">
-            <button className="btn btn-outline-primary p-3" onClick={this.handleGetExecProfile}>Run</button>
+            <button className="btn btn-outline-primary px-3" onClick={this.handleGetExecProfile}>Run</button>
             <div className="exec-table-wrapper ml-5">
               <table className="exec-table">
                 <thead>
@@ -202,28 +226,27 @@ class AppForm extends Component {
                   </tr>
                 </thead>
                 { exec_info.length === 0 || exec_info === "The execute information for is not ready." ? (
-                    <tbody>
-                      <tr>
-                        <th className="font-weight-normal">N/A</th>
-                        <th className="font-weight-normal">N/A</th>
-                        <th className="font-weight-normal">N/A</th>
-                        <th className="font-weight-normal">N/A</th>
-                      </tr>
-                    </tbody>
-                    ) : (
-                    <tbody>
-                    {
-                      exec_info.map((item, key) => {
-                        console.log(item)
-                        return <tr key={key}>
-                            <th className="font-weight-normal">{item.split(",")[0]}</th>
-                            <th className="font-weight-normal">{item.split(",")[1]}</th>
-                            <th className="font-weight-normal">{item.split(",")[2]}</th>
-                            <th className="font-weight-normal">{item.split(",")[3]}</th>
-                          </tr>;
-                        })
-                    }
-                    </tbody>
+                  <tbody>
+                    <tr>
+                      <th className="font-weight-normal">N/A</th>
+                      <th className="font-weight-normal">N/A</th>
+                      <th className="font-weight-normal">N/A</th>
+                      <th className="font-weight-normal">N/A</th>
+                    </tr>
+                  </tbody>
+                  ) : (
+                  <tbody>
+                  {
+                    exec_info.map((item, key) => {
+                      return <tr key={key}>
+                          <th className="font-weight-normal">{item.split(",")[0]}</th>
+                          <th className="font-weight-normal">{item.split(",")[1]}</th>
+                          <th className="font-weight-normal">{item.split(",")[2]}</th>
+                          <th className="font-weight-normal">{item.split(",")[3]}</th>
+                        </tr>;
+                      })
+                  }
+                  </tbody>
                     )
                   }
               </table>
@@ -231,12 +254,6 @@ class AppForm extends Component {
           </div>
         </div>
 
-        <div className="mqtt mb-4">
-          <h4 className="mb-3">CIRCE Visualization</h4>
-          <button className="btn btn-outline-primary mr-2" onClick={this.handlePlot}>Get Plots</button>
-          <a href="http://localhost:5000/plot">Please see plots in a new window by click on this link.</a>
-          <div id='testPlot' className="bk-root"></div>
-        </div>
 
         <div className="network mb-4">
           <h4 className="mb-3">Get Network Statistics</h4>
@@ -246,23 +263,46 @@ class AppForm extends Component {
             It will give the quadratic regression parameters of each link representing the corresponding communication cost.
           </div>
           <div className="d-flex justify-content-start align-items-center">
-            <button className="btn btn-outline-primary">Run</button>
-            <table className="ml-3">
-              <thead>
-                <tr>
-                  <th scope="col">Task_name</th>
-                  <th scope="col">local_input_file</th>
-                  <th scope="col">Enter_time</th>
-                  <th scope="col">Execute_time</th>
-                  <th scope="col">Finish_time</th>
-                  <th scope="col">Elapse_time</th>
-                  <th scope="col">Duration_time</th>
-                  <th scope="col">Waiting_time </th>
-                </tr>
-              </thead>
-              <tbody>
-              </tbody>
-            </table>
+            <button className="btn btn-outline-primary px-3" onClick={this.handleGetNetworkProfile}>Run</button>
+            <div className="profiler-table-wrapper ml-5">
+              <table className="profiler-table">
+                <thead>
+                  <tr>
+                    <th scope="col">Source Node</th>
+                    <th scope="col">Source IP</th>
+                    <th scope="col">Destination Node</th>
+                    <th scope="col">Destination IP</th>
+                    <th scope="col">Parameters</th>
+                  </tr>
+                </thead>
+                { profiler_info_arr.length === 0 || profiler_info_arr === "The network information for is not ready." ? (
+                  <tbody>
+                    <tr>
+                      <th className="font-weight-normal">N/A</th>
+                      <th className="font-weight-normal">N/A</th>
+                      <th className="font-weight-normal">N/A</th>
+                      <th className="font-weight-normal">N/A</th>
+                      <th className="font-weight-normal">N/A</th>
+                    </tr>
+                  </tbody>
+                  ) : (
+                  <tbody>
+                  {
+                    profiler_info_arr.map((item, key) => {
+                      return <tr key={key}>
+                          <th className="font-weight-normal">{item.split(",")[0].replace(/"/g, "")}</th>
+                          <th className="font-weight-normal">{item.split(",")[1].replace(/"/g, "")}</th>
+                          <th className="font-weight-normal">{item.split(",")[2].replace(/"/g, "")}</th>
+                          <th className="font-weight-normal">{item.split(",")[3].replace(/"/g, "")}</th>
+                          <th className="font-weight-normal">{item.split(",")[4].replace(/"/g, "")}</th>
+                        </tr>;
+                      })
+                  }
+                  </tbody>
+                    )
+                  }
+              </table>
+            </div>
           </div>
         </div>
 

@@ -36,7 +36,6 @@ import paho.mqtt.client as mqtt
 global bottleneck
 bottleneck = defaultdict(list)
 
-BOKEH = 1
 
 def tic():
     return time.time()

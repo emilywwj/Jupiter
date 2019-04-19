@@ -13,3 +13,8 @@ td {
   max-height: 550px;
   overflow: auto;
 }
+
+.profiler-table-wrapper {
+  max-height: 550px;
+  overflow: auto;
+}

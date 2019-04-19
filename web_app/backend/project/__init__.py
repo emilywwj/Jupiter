@@ -189,46 +189,53 @@ def modify_doc(doc):
     demo.main(doc)
 
 
-@app.route('/network_profile', methods=['POST'])
+@app.route('/network_profile')
 def get_network_statistics():
 
-    file_exist = False
-    response_object = {"network_statistics": {}}
-    while not file_exist:
-        try:
-            f = open('profiler_home.txt')
-            lines = f.readlines()
-            lines.pop(0)
-            json_string = json.dumps(lines)
-            response_object["network_statistics"] = json_string
-            file_exist = True
-        except FileNotFoundError:
-            print("The execute information is not ready.")
+    response_object = {"network_profiler_info": {}}
+    nodes = ["home"]
 
+    # currenly only test working for heft task mapper
+    get_k8s_mapper_info()
+
+    try:
+        exist = os.path.isfile('network_log.txt')
+        if not exist:
             run_command_get_file()
-            time.sleep(5)
-            continue
-
+        f = open('network_log.txt')
+        print("The network_log txt file exists.")
+        lines = f.readlines()
+        json_string = json.dumps(lines)
+        print(json_string)
+    except FileNotFoundError:
+        response_object["network_profiler_info"] = "The network information for is not ready."
+    response_object["network_profiler_info"] = json_string
     return jsonify(response_object), 201
 
-# def run_command_get_file():
-#     jupiter_config.set_globals()
-#     profiler_namespace = jupiter_config.PROFILER_NAMESPACE
-#     app_name = jupiter_config.APP_OPTION
-#     cmd = "kubectl get pod -l app=homeprofiler --namespace=%s -o name" % (profiler_namespace)
-#     cmd_output = get_command_output(cmd)
-#     pod_name = cmd_output.split('/')[1].split('\\')[0]
-#     # file_path = '%s/%s:/network_profiling/parameters_*' % (profiler_namespace, pod_name)
-    
-#     cmd = "kubectl cp " + file_path + " ."
-#     print("RUN: " + cmd)
-#     os.system(cmd)
+def get_k8s_mapper_info():
+    jupiter_config.set_globals()
+
+    global mapper_namespace, app_name, mapper_home_pod_name
+    mapper_namespace = jupiter_config.MAPPER_NAMESPACE
+    app_name = jupiter_config.APP_OPTION
+
+    cmd = "kubectl get pod -l app=%s1-home --namespace=%s -o name" % (app_name, mapper_namespace)
+    cmd_output = get_command_output(cmd)
+    print(cmd)
+    print(cmd_output)
+    mapper_home_pod_name = cmd_output.split('/')[1].split('\\')[0]
+
+def run_command_get_file():
+    file_path = '%s/%s:/heft/network_log.txt' % (mapper_namespace, mapper_home_pod_name)
+    cmd = "kubectl cp " + file_path + " ."
+    print("RUN: " + cmd)
+    os.system(cmd)
 
 
-# def get_command_output(command):
-#     command = command.split(" ")
-#     p = subprocess.Popen(command, stdout=subprocess.PIPE)
-#     (output, err) = p.communicate()
-#     # retcode = p.wait()
-#     output = str(output)
-#     return output
+def get_command_output(command):
+    command = command.split(" ")
+    p = subprocess.Popen(command, stdout=subprocess.PIPE)
+    (output, err) = p.communicate()
+    output = str(output)
+    return output
+

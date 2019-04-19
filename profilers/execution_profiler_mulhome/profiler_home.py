@@ -189,10 +189,10 @@ def main():
     print(nodename)
 
 
-    if BOKEH == 1:
-        print("Mqtt test in profiler_home.py!")
-        msg = "TEST: test if mqtt function works"
-        demo_help("JUPITER", msg)
+    # if BOKEH == 1:
+    #     print("Mqtt test in profiler_home.py!")
+    #     msg = "TEST: test if mqtt function works"
+    #     demo_help("JUPITER", msg)
 
 
     client_mongo = MongoClient('mongodb://localhost:'+ str(MONGO_PORT) +'/')

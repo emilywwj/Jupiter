@@ -33,6 +33,31 @@ import datetime
 import collections
 from pytz import timezone
 
+import networkx as nx
+from bokeh.models import Plot, Range1d, MultiLine, Circle, HoverTool, BoxZoomTool, ResetTool
+from bokeh.models.graphs import from_networkx
+from networkx.drawing.nx_agraph import graphviz_layout
+
+
+def get_dag_nodes(lines):
+    nodes = []
+    for line in lines:
+        nodes.append(line.rstrip().split(" ")[0])
+    return nodes
+
+def get_dag_links(lines):
+    links = []
+    for i, line in enumerate(lines):
+        arr = line.rstrip().split(" ")
+        node = arr[0]
+        print(arr)
+        if i < len(lines)-1:
+            for i, each in enumerate(arr):
+                if i >= 3:
+                    links.append((node, arr[i].replace("\n","")))
+    return links
+
+
 # from threading import Thread
 
 # def mqtt_task(m):
@@ -74,21 +99,25 @@ def main(doc=curdoc()):
 
         # The callback for when a PUBLISH message is received from the server.
         def on_message(self,client, userdata, msg):
-            start_messages = ['localpro starts', 'aggregate0 starts', 'aggregate1 starts', 'aggregate2 starts',
-            'simpledetector0 starts', 'simpledetector1 starts', 'simpledetector2 starts', 'astutedetector0 starts',
-            'astutedetector1 starts', 'astutedetector2 starts', 'fusioncenter0 starts', 'fusioncenter1 starts', 
-            'fusioncenter2 starts', 'globalfusion starts']
+            start_messages = []
+            for each in tasks:
+                start_messages.append(each + " starts")
 
-            end_messages = ['localpro ends', 'aggregate0 ends', 'aggregate1 ends', 'aggregate2 ends',
-            'simpledetector0 ends', 'simpledetector1 ends', 'simpledetector2 ends', 'astutedetector0 ends',
-            'astutedetector1 ends', 'astutedetector2 ends', 'fusioncenter0 ends', 'fusioncenter1 ends', 
-            'fusioncenter2 ends', 'globalfusion ends']
+            end_messages = []
+            for each in tasks:
+                end_messages.append(each + " ends")
+
+            # start_messages = ['localpro starts', 'aggregate0 starts', 'aggregate1 starts', 'aggregate2 starts',
+            # 'simpledetector0 starts', 'simpledetector1 starts', 'simpledetector2 starts', 'astutedetector0 starts',
+            # 'astutedetector1 starts', 'astutedetector2 starts', 'fusioncenter0 starts', 'fusioncenter1 starts', 
+            # 'fusioncenter2 starts', 'globalfusion starts']
+
+            # end_messages = ['localpro ends', 'aggregate0 ends', 'aggregate1 ends', 'aggregate2 ends',
+            # 'simpledetector0 ends', 'simpledetector1 ends', 'simpledetector2 ends', 'astutedetector0 ends',
+            # 'astutedetector1 ends', 'astutedetector2 ends', 'fusioncenter0 ends', 'fusioncenter1 ends', 
+            # 'fusioncenter2 ends', 'globalfusion ends']
 
 
-            top_dag=[5.15, 4.15, 4.15, 4.15, 3.15, 3.15, 3.15, 3.15, 3.15, 3.15, 2.15,2.15,2.15,1.15]
-            bottom_dag=[4.85, 3.85,3.85,3.85, 2.85,2.85,2.85,2.85,2.85,2.85, 1.85,1.85,1.85, 0.85]
-            left_dag= [3.3,1.3,3.3,5.3, 0.8, 1.8, 2.8, 3.8, 4.8,5.8, 1.3,3.3,5.3,3.3]
-            right_dag=[3.7,1.7,3.7,5.7, 1.2, 2.2, 3.2, 4.2, 5.2, 6.2,1.7,3.7,5.7,3.7]
 
 
             message = msg.payload.decode()
@@ -101,23 +130,14 @@ def main(doc=curdoc()):
             print('--------------')
             if message in start_messages:
                 index = start_messages.index(message)
-                topd,bottomd,leftd,rightd = top_dag[index],bottom_dag[index],left_dag[index],right_dag[index]
                 color = "red"
-                doc.add_next_tick_callback(partial(update3, top= topd, bottom=bottomd,left=leftd,right=rightd, color=color))
+                doc.add_next_tick_callback(partial(update3, index=index, color=color))
                 
 
             elif message in end_messages:
-
                 index = end_messages.index(message)
-                topd,bottomd,leftd,rightd = top_dag[index],bottom_dag[index],left_dag[index],right_dag[index]
-
-
-                color=['#C2D2F9',"#5984E8","#5984E8","#5984E8","#9380F0","#9380F0","#9380F0",
-                "#1906BF","#1906BF","#1906BF", '#084594','#084594','#084594',"#33148E"]
-                color1=["#C2D2F9","#5984E8","#5984E8","#5984E8","#9380F0","#1906BF","#9380F0",
-                "#1906BF","#9380F0","#1906BF","#084594","#084594","#084594","#33148E"]
-
-                doc.add_next_tick_callback(partial(update3, top= topd, bottom=bottomd,left=leftd,right=rightd, color=color1[index]))
+                color1 = "blue"
+                doc.add_next_tick_callback(partial(update3, index=index, color=color1))
 
             elif message.startswith('mappings'):
                 print('---- Receive task mapping')
@@ -176,12 +196,19 @@ def main(doc=curdoc()):
         source1.stream(dict(x=[x], y=[y], time=[time], text_font_style= ['bold']))
 
     @gen.coroutine
-    def update3(top,bottom,left,right,color):
-        source2.stream(dict(top=[top], bottom=[bottom],left=[left],right=[right],color=[color]))
+    def update3(index,color):
+        colors = []
+        for i,each in enumerate(nodes):
+            if i == index:
+                colors.append(color)
+                continue
+            colors.append('blue')
+        # print("DEBUG update3 colors:")
+        # print(colors)
+        graph.node_renderer.data_source.data['colors'] = colors
 
     @gen.coroutine
     def update4(attr, old, new):
-        print("Call update4!")
         assigned_info = new.split(' ')[1:]
         for info in assigned_info:
             tmp = info.split(':')
@@ -197,7 +224,6 @@ def main(doc=curdoc()):
 
     @gen.coroutine
     def update5(attr, old, new):
-        print("Call update5!")
         assigned_info = new.split(' ')[1:]
         
         for info in assigned_info:
@@ -281,7 +307,7 @@ def main(doc=curdoc()):
 
     global OUTFNAME, SERVER_IP, SUBSCRIPTIONS, DAG_PATH,NODE_PATH
     OUTFNAME = 'demo_original.html'
-    SERVER_IP = 'iot.eclipse.org'
+    SERVER_IP = 'test.mosquitto.org'
     SUBSCRIPTIONS = 'JUPITER'
     DAG_PATH = 'configuration.txt'
     NODE_PATH = '../../nodes.txt'
@@ -295,11 +321,8 @@ def main(doc=curdoc()):
 
     global source, source1, source2, source3,source4,source5,source6, source5_df, nodes, m, p,p1
 
-    # doc = curdoc()
-
     source = ColumnDataSource(data=dict(top=[0], bottom=[0],left=[0],right=[0], color=["#9ecae1"],line_color=["black"], line_width=[2]))
     source1 = ColumnDataSource(data=dict(x=[8], y=[3.5], time=[''],text_font_style=['bold']))
-    source2 = ColumnDataSource(data=dict(top=[5.15],bottom=[4.85],left=[3.3],right=[3.7],color=["#C2D2F9"]))
 
 
     global nodes, num_nodes,MAX_X,MAX_Y,tasks
@@ -425,113 +448,70 @@ def main(doc=curdoc()):
 
     ###################################################################################################################################
 
-    p1=figure(plot_width=600, plot_height=600)
-    p1.background_fill_color = "#EEEDED"
-    p1.xgrid.grid_line_color = None
-    p1.ygrid.grid_line_color = None
-    p1.xaxis.axis_label = 'Network Anomaly Detection Task Graph'
-    p1.xaxis.axis_label_text_font_size='20pt'
+    file = open('configuration.txt', 'r')
+    lines = file.readlines()
+    lines.pop(0)
+    nodes = get_dag_nodes(lines)
+    links = get_dag_links(lines)
+    print(nodes)
+    print(links)
+
+    G = nx.DiGraph()
+    G.add_nodes_from(nodes)
+    G.add_edges_from(links)
+    pos = graphviz_layout(G ,prog='dot')
+
+    # calculate the range for task graph
+    range_x = [0,0]
+    range_y = [0,0]
+    for each in pos.values():
+        range_x[0] = min(range_x[0], int(each[0]))
+        range_x[1] = max(range_x[1], int(each[0]))
+        range_y[0] = min(range_y[0], int(each[1]))
+        range_y[1] = max(range_y[1], int(each[1]))
+    range_x = [range_x[0]-50, range_x[1]+150]
+    range_y = [range_y[0]-50, range_y[1]+50]
+
+    p1 = Plot(plot_width=700, plot_height=700,
+        x_range=Range1d(range_x[0], range_x[1]), y_range=Range1d(range_y[0], range_y[1]))
+    p1.title.text = "Network Anomaly Detection Task Graph"
+    p.title.text_font_size = '20pt'
+    node_hover_tool = HoverTool(tooltips=[("task", "@index")])
+    p1.add_tools(node_hover_tool, BoxZoomTool(), ResetTool())
 
 
-    p1.add_layout(Label(x= 4.5, y=4.7, text="JUPITER", text_color="black", text_font_style='bold',text_font_size='32pt'))
+    global graph
+    graph = from_networkx(G, pos, scale=1, center=(0,0))
 
+    # print("DEBUG data_source:")
+    # print(graph.node_renderer.data_source)
+    # print(graph.edge_renderer.data_source.data)
+    # print("DEBUG keys:")
+    # print(pos.keys())
+    # print("DEBUG values:")
+    # print(pos.values())
 
-    p1.quad(top=[5.15, 4.15, 4.15, 4.15, 3.15, 3.15, 3.15, 3.15, 3.15, 3.15, 2.15,2.15,2.15,1.15], 
-        bottom=[4.85, 3.85,3.85,3.85, 2.85,2.85,2.85,2.85,2.85,2.85, 1.85,1.85,1.85, 0.85], 
-        left=[3.3,1.3,3.3,5.3, 0.8, 1.8, 2.8, 3.8,  4.8,5.8, 1.3,3.3,5.3,3.3], 
-        right=[3.7,1.7,3.7,5.7, 1.2, 2.2, 3.2,  4.2,   5.2,  6.2,     1.7,3.7,5.7,3.7],
-        color=["#C2D2F9","#5984E8","#5984E8","#5984E8","#9380F0","#1906BF","#9380F0","#1906BF","#9380F0","#1906BF","#084594","#084594","#084594","#33148E"])
+    colors = []
+    indexs = []
+    for i,each in enumerate(nodes):
+        indexs.append(i)
+        colors.append('blue')
+    graph.node_renderer.data_source.data['colors'] = colors
 
+    graph.node_renderer.glyph = Circle(size=15, fill_color='colors')
+    graph.edge_renderer.glyph = MultiLine(line_color="black", line_alpha=0.8, line_width=1)
+    p1.renderers.append(graph)
 
-
-    #p1.ellipse(3.5, 5, size=40, color="#C2D2F9") #localpro
-    localpro = Label(x=2.3, y=4.9, text='localpro',text_color='black',background_fill_color='#C2D2F9', background_fill_alpha=0.5)
-    p1.add_layout(localpro)
-    p1.add_layout(Arrow(end=NormalHead(line_color="black", line_width=1, size=10),x_start=3.5, y_start=4.85, x_end=1.5, y_end=4.2))
-    p1.add_layout(Arrow(end=NormalHead(line_color="black", line_width=1, size=10),x_start=3.5, y_start=4.85, x_end=3.5, y_end=4.2))
-    p1.add_layout(Arrow(end=NormalHead(line_color="black", line_width=1, size=10),x_start=3.5, y_start=4.85, x_end=5.5, y_end=4.2))
-
-
-    #p1.ellipse(1.5, 4, size=40, color="#5984E8") #aggregate0
-    aggregare0 = Label(x=1, y=4.3, text='aggregate0',text_color='black',background_fill_color='#5984E8', background_fill_alpha=0.5)
-    p1.add_layout(aggregare0)
-    p1.add_layout(Arrow(end=NormalHead(line_color="black", line_width=1, size=10),x_start=1.5, y_start=3.83, x_end=1, y_end=3.2))
-    p1.add_layout(Arrow(end=NormalHead(line_color="black", line_width=1, size=10),x_start=1.5, y_start=3.83, x_end=2, y_end=3.2))
-
-
-    #p1.ellipse(3.5, 4, size=40, color="#5984E8") #aggregate1
-    aggregate1 = Label(x=3.15, y=4.3, text='aggregate1',text_color='black',background_fill_color='#5984E8', background_fill_alpha=0.5)
-    p1.add_layout(aggregate1)
-    p1.add_layout(Arrow(end=NormalHead(line_color="black", line_width=1, size=10),x_start=3.5, y_start=3.83, x_end=3, y_end=3.2))
-    p1.add_layout(Arrow(end=NormalHead(line_color="black", line_width=1, size=10),x_start=3.5, y_start=3.83, x_end=4, y_end=3.2))
-
-
-    #p1.ellipse(5.5, 4, size=40, color="#5984E8") #aggregate2
-    aggregate2 = Label(x=5, y=4.3, text='aggregate2',text_color='black',background_fill_color='#5984E8', background_fill_alpha=0.5)
-    p1.add_layout(aggregate2)
-    p1.add_layout(Arrow(end=NormalHead(line_color="black", line_width=1, size=10),x_start=5.5, y_start=3.83, x_end=5, y_end=3.2))
-    p1.add_layout(Arrow(end=NormalHead(line_color="black", line_width=1, size=10),x_start=5.5, y_start=3.83, x_end=6, y_end=3.2))
-
-
-    #p1.ellipse(1, 3, size=40, color="#9380F0") #simple_detector0
-    simple_detector0 = Label(x=0.7, y=3.35, text='simple_detector0',text_color='black',background_fill_color='#9380F0', background_fill_alpha=0.5)
-    p1.add_layout(simple_detector0)
-    p1.add_layout(Arrow(end=NormalHead(line_color="black", line_width=1, size=10),x_start=1, y_start=2.83, x_end=1.45, y_end=2.18))
-
-
-    #p1.ellipse(2, 3, size=40, color="#1906BF") #astute_detector0
-    astute_detector0 = Label(x=1.5, y=2.6, text='astute_detector0',text_color='black',background_fill_color='#1906BF', background_fill_alpha=0.7)
-    p1.add_layout(astute_detector0)
-    p1.add_layout(Arrow(end=NormalHead(line_color="black", line_width=1, size=10),x_start=2, y_start=2.83, x_end=1.55, y_end=2.18))
-
-
-    #p1.ellipse(3, 3, size=40, color="#9380F0") #simple_detector1
-    simple_detector1 = Label(x=2.5, y=3.35, text='simple_detector1',text_color='black',background_fill_color='#9380F0', background_fill_alpha=0.5)
-    p1.add_layout(simple_detector1)
-    p1.add_layout(Arrow(end=NormalHead(line_color="black", line_width=1, size=10),x_start=3, y_start=2.83, x_end=3.45, y_end=2.18))
-
-
-    #p1.ellipse(4, 3, size=40, color="#1906BF") #astute_detector1
-    astute_detector1 = Label(x=3.5, y=2.6, text='astute detector1',text_color='black',background_fill_color='#1906BF', background_fill_alpha=0.7)
-    p1.add_layout(astute_detector1)
-    p1.add_layout(Arrow(end=NormalHead(line_color="black", line_width=1, size=10),x_start=4, y_start=2.83, x_end=3.55, y_end=2.18))
-
-
-    #p1.ellipse(5, 3, size=40, color="#9380F0") #simple_detector2
-    simple_detector2 = Label(x=4.5, y=3.35, text='simple_detector2',text_color='black',background_fill_color='#9380F0', background_fill_alpha=0.5)
-    p1.add_layout(simple_detector2)
-    p1.add_layout(Arrow(end=NormalHead(line_color="black", line_width=1, size=10),x_start=5, y_start=2.83, x_end=5.45, y_end=2.18))
-
-
-    #p1.ellipse(6, 3, size=40, color="#1906BF") #astute_detector2
-    astute_detector2 = Label(x=5.5, y=2.6, text='astute_detector2',text_color='black',background_fill_color='#1906BF', background_fill_alpha=0.7)
-    p1.add_layout(astute_detector2)
-    p1.add_layout(Arrow(end=NormalHead(line_color="black", line_width=1, size=10),x_start=6, y_start=2.83, x_end=5.55, y_end=2.18))
-
-
-    #p1.ellipse(1.5, 2, size=40, color="#084594") #fusion_center0
-    fusion_center0 = Label(x=1, y=1.6, text='fusion_center0',text_color='black',background_fill_color='#084594', background_fill_alpha=0.5)
-    p1.add_layout(fusion_center0)
-    p1.add_layout(Arrow(end=NormalHead(line_color="black", line_width=1, size=10),x_start=1.5, y_start=1.83, x_end=3.3, y_end=1.18))
-
-
-    #p1.ellipse(3.5, 2, size=40, color='#084594') #fusion_center1
-    fusion_center1 = Label(x=3, y=1.6, text='fusion_center1',text_color='black',background_fill_color='#084594', background_fill_alpha=0.5)
-    p1.add_layout(fusion_center1)
-    p1.add_layout(Arrow(end=NormalHead(line_color="black", line_width=1, size=10),x_start=3.5, y_start=1.83, x_end=3.5, y_end=1.18))
-
-
-    #p1.ellipse(5.5, 2, size=40, color='#084594') #fusion_center2
-    fusion_center2 = Label(x=5, y=1.6, text='fusion_center2',text_color='black',background_fill_color='#084594', background_fill_alpha=0.5)
-    p1.add_layout(fusion_center2)
-    p1.add_layout(Arrow(end=NormalHead(line_color="black", line_width=1, size=10),x_start=5.5, y_start=1.83, x_end=3.7, y_end=1.18))
-
-
-    #p1.ellipse(3.5, 1, size=40, color="#33148E") #global_fusion
-    global_fusion = Label(x=2, y=0.9, text='global_fusion',text_color='black',background_fill_color='#33148E', background_fill_alpha=0.5)
-    p1.add_layout(global_fusion)
-
-    ellipse_source = p1.quad(top='top', bottom='bottom', left='left', right='right',color='color', source= source2)
+    # add labels to each node
+    x, y = zip(*graph.layout_provider.graph_layout.values())
+    print(x, y)
+    node_labels = nx.get_node_attributes(G, 'index')
+    source = ColumnDataSource({'x': x, 'y': y,
+                               'task': tuple(nodes)})
+    labels = LabelSet(x='x', y='y', text='task', source=source,
+                      background_fill_color='white', x_offset=(-30), y_offset=8,
+                      text_font_size="9pt")
+    p1.renderers.append(labels)
 
     ###################################################################################################################################
     # node_info = column(title1,widgetbox(data_table,width=400,height=280))
@@ -544,10 +524,4 @@ def main(doc=curdoc()):
     doc_layout = column(row(p2,p), row(p1), row(p3,p4))
     doc.add_root(doc_layout)
     doc.add_periodic_callback(update, 50) 
-    return p3
-
-    # m = mq(outfname=OUTFNAME,subs=SUBSCRIPTIONS,server=SERVER_IP,port=1883,timeout=60,looptimeout=1)
-    # thread = Thread(target=mqtt_task(m))
-    # thread.start()
-
-# main(doc)
+    return

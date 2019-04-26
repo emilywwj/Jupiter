@@ -22,6 +22,8 @@ Now it will open your browser automatically with link to http://localhost:3000 t
 
 2)set up the docker files and deploy Jupiter
 
-3)before run auto deploy scripts, click on "Get Plots" button and open links in a new page to see the CIRCE visualization with real time data.
+3)copy your configuration.txt to web_app/backend folder
 
-4)when you deploy Jupiter successfully, click on "Run" button to see the exectution information and network statistics from DRUPE.
+4)before run auto deploy scripts, click on "Get Plots" button and open links in a new page to see the CIRCE visualization with real time data.
+
+5)when you deploy Jupiter successfully, click on "Run" button to see the exectution information and network statistics from DRUPE.

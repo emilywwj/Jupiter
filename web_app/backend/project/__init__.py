@@ -203,7 +203,7 @@ def get_network_statistics():
     try:
         exist = os.path.isfile('network_log.txt')
         if not exist:
-            run_command_get_file()
+            run_command_get_file_net()
         f = open('network_log.txt')
         print("The network_log txt file exists.")
         lines = f.readlines()
@@ -227,7 +227,7 @@ def get_k8s_mapper_info():
     print(cmd_output)
     mapper_home_pod_name = cmd_output.split('/')[1].split('\\')[0]
 
-def run_command_get_file():
+def run_command_get_file_net():
     file_path = '%s/%s:/heft/network_log.txt' % (mapper_namespace, mapper_home_pod_name)
     cmd = "kubectl cp " + file_path + " ."
     print("RUN: " + cmd)

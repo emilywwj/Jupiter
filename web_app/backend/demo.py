@@ -202,7 +202,7 @@ def main(doc=curdoc()):
             if i == index:
                 colors.append(color)
                 continue
-            colors.append('blue')
+            colors.append(each)
         # print("DEBUG update3 colors:")
         # print(colors)
         graph.node_renderer.data_source.data['colors'] = colors
@@ -307,6 +307,7 @@ def main(doc=curdoc()):
 
     global OUTFNAME, SERVER_IP, SUBSCRIPTIONS, DAG_PATH,NODE_PATH
     OUTFNAME = 'demo_original.html'
+    # SERVER_IP = 'test.mosquitto.org'
     SERVER_IP = 'test.mosquitto.org'
     SUBSCRIPTIONS = 'JUPITER'
     DAG_PATH = 'configuration.txt'

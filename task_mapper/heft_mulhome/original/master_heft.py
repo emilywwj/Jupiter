@@ -184,9 +184,11 @@ def main():
             if BOKEH == 1:
                 assgn = ' '.join('{}:{}:{}'.format(key, val,t) for key, val in assignments.items())
                 msg = "mappings "+ assgn
+                print("demo_help:")
+                print(msg)
                 demo_help(BOKEH_SERVER,BOKEH_PORT,"JUPITER", msg)
 
-            break;
+            break
         else:
             print('No input TGFF file found!')
             time.sleep(15)

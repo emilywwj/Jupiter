@@ -23,6 +23,7 @@ import csv
 import configparser
 from os import path
 from functools import wraps
+import paho.mqtt.client as mqtt
 
 
 app = Flask(__name__)
@@ -59,6 +60,19 @@ def get_global_info():
     print(home_profiler)
     print(home_profiler_nodes)
     print(home_profiler_ip)
+
+    global BOKEH_SERVER, BOKEH_PORT, BOKEH
+    BOKEH_SERVER = config['OTHER']['BOKEH_SERVER']
+    BOKEH_PORT = int(config['OTHER']['BOKEH_PORT'])
+    BOKEH = int(config['OTHER']['BOKEH'])
+
+
+def demo_help(server,port,topic,msg):
+    client = mqtt.Client()
+    client.connect(server, port, 60)
+    client.publish(topic, msg, qos=1)
+    client.disconnect()
+
 
 def get_exec_profile_data(exec_home_ip, MONGO_SVC_PORT, num_nodes):
     """Collect the execution profile from the home execution profiler's MongoDB
@@ -176,6 +190,11 @@ def get_network_data_drupe(profiler_ip, MONGO_SVC_PORT, network_map):
             info_to_csv=[network_map[record['Source[IP]']],record['Source[IP]'],network_map[record['Destination[IP]']], record['Destination[IP]'],str(record['Parameters'])]
             network_info.append(info_to_csv)
     print('Network information has already been provided')
+
+    # if BOKEH == 1:
+    #     msg = "network_info: " + network_info
+    #     demo_help(BOKEH_SERVER,BOKEH_PORT,"JUPITER",msg)
+
     print(network_info)
     with open('/heft/network_log.txt','w') as f:
         writer = csv.writer(f, quoting=csv.QUOTE_ALL)

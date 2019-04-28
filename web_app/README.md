@@ -10,6 +10,7 @@ $ python manage.py run
 ```
 
 * Start frontend in another terminal window:
+requirements: make sure you have installed the latest version of NodeJS and npm on your machine.
 ```console
 $ cd frontend
 $ npm install
